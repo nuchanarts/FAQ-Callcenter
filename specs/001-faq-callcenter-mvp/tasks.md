@@ -36,8 +36,8 @@ implementation that follows. Commit after every task (XII).
 - [X] T017 [P] [US1] Tests `tests/unit/domain/search.test.ts` (normalize, Thai substring, keyword "ออเทน", AND terms, title>keywords>solution, ties by order, 200 topics < 10 ms); implement `src/domain/search.ts`
 - [X] T018 [P] [US1] Tests `tests/unit/domain/topics.test.ts` (merge base+stored → original/edited/custom, hidden filtering, ordering); implement `src/domain/topics.ts`
 - [X] T019 [US1] Built-in content `src/content/base-topics.ts` (≥ 2 topics per category, valid per schema — test `tests/unit/content/base-topics.test.ts`)
-- [ ] T020 [US1] Tests `tests/unit/services/topic-service.public.test.ts`; implement `getPublicTopics()` in `src/services/topic-service.ts`
-- [ ] T021 [US1] Integration test `tests/integration/api-topics.test.ts`; implement `src/app/api/topics/route.ts`, `src/app/api/health/route.ts`
+- [X] T020 [US1] Tests `tests/unit/services/topic-service.public.test.ts`; implement `getPublicTopics()` in `src/services/topic-service.ts`
+- [X] T021 [US1] Integration test `tests/integration/api-topics.test.ts`; implement `src/app/api/topics/route.ts`, `src/app/api/health/route.ts`
 - [ ] T022 [US1] Component tests `tests/unit/components/home.test.tsx`; implement `src/components/features/topic/content-renderer.tsx`, `level-badge.tsx`, `topic-card.tsx`, `src/components/features/home/{basic-steps,search-box,category-tabs,topic-list,home-screen}.tsx`, page `src/app/page.tsx`, header `src/components/features/layout/site-header.tsx`
 - [ ] T023 [US1] E2E `e2e/viewer-search.spec.ts` (3 steps visible, search ออเทน, category filter + counts, expand/collapse, empty state, axe)
 
