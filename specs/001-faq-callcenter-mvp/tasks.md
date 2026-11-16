@@ -43,7 +43,7 @@ implementation that follows. Commit after every task (XII).
 
 ## Phase 4: US2 — แจ้งปัญหา (P2)
 
-- [ ] T024 [P] [US2] Tests `tests/unit/domain/report.test.ts` (each required field, unit code 5 digits incl. "12 345", phone 9–15 digits, optional email/AnyDesk, exact template output, "-" for empty optional); implement `src/domain/report.ts`
+- [X] T024 [P] [US2] Tests `tests/unit/domain/report.test.ts` (each required field, unit code 5 digits incl. "12 345", phone 9–15 digits, optional email/AnyDesk, exact template output, "-" for empty optional); implement `src/domain/report.ts`
 - [ ] T025 [US2] Component tests `tests/unit/components/report-form.test.tsx` (prefill from topic, field errors keep input, remember-me saves without details, copy); implement `src/components/features/report/{report-form,message-preview}.tsx`, page `src/app/report/page.tsx`, shared `src/components/ui/copy-button.tsx`
 - [ ] T026 [US2] E2E `e2e/report.spec.ts` ("ยังไม่ได้" → prefilled, validation, generate + copy exact text, remember-me across reload)
 
