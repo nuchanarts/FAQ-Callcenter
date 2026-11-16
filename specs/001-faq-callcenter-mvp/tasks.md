@@ -11,21 +11,21 @@ implementation that follows. Commit after every task (XII).
 
 ## Phase 1: Setup
 
-- [ ] T001 Create project files: `package.json` (scripts dev/build/start/lint/typecheck/test/test:coverage/test:e2e), `tsconfig.json` (strict, `@/*`), `next.config.ts`, `postcss.config.mjs`, `.env.example`, `.gitignore` += `.data/`
-- [ ] T002 [P] ESLint (`eslint.config.mjs`) + Prettier (`.prettierrc`)
-- [ ] T003 [P] Vitest `vitest.config.ts` (jsdom, `@/` alias, coverage thresholds 80% global, 90% `src/domain/**` + `src/services/**`) + `tests/setup.ts`
-- [ ] T004 [P] Playwright `playwright.config.ts` (projects desktop-chromium + mobile 360×740; webServer build+start `DATA_BACKEND=memory` port 3100) 
-- [ ] T005 Pre-commit hooks: `simple-git-hooks` + `lint-staged` (eslint --fix, prettier, typecheck, `vitest related --run`)
+- [X] T001 Create project files: `package.json` (scripts dev/build/start/lint/typecheck/test/test:coverage/test:e2e), `tsconfig.json` (strict, `@/*`), `next.config.ts`, `postcss.config.mjs`, `.env.example`, `.gitignore` += `.data/`
+- [X] T002 [P] ESLint (`eslint.config.mjs`) + Prettier (`.prettierrc`)
+- [X] T003 [P] Vitest `vitest.config.ts` (jsdom, `@/` alias, coverage thresholds 80% global, 90% `src/domain/**` + `src/services/**`) + `tests/setup.ts`
+- [X] T004 [P] Playwright `playwright.config.ts` (projects desktop-chromium + mobile 360×740; webServers `next start` on 3100 `DATA_BACKEND=memory` and 3101 `DATA_BACKEND=failing`, both with `ALLOW_DEMO_ADMINS=true`)
+- [X] T005 Pre-commit hooks: `simple-git-hooks` + `lint-staged` (eslint --fix, prettier, typecheck, `vitest related --run`)
 
 ## Phase 2: Foundational
 
-- [ ] T006 [P] Tests `tests/unit/domain/errors.test.ts`; implement `src/domain/errors.ts` (ValidationError, NotFoundError, ConflictError, ForbiddenError, UnauthorizedError, NotDeletableError, `toActionError`) + `src/lib/action-result.ts`
-- [ ] T007 [P] Tests `tests/unit/domain/topic-schema.test.ts`; implement `src/domain/categories.ts` (8 fixed), `src/domain/levels.ts`, `src/domain/topic.ts` zod schema — title "required, trimmed, 1–150"; keywords "≤ 20 items, each trimmed 1–40, de-duplicated case-insensitive"; solution "required 1–5,000"; attachments "≤ 10, label 1–80, url starts with https://"
-- [ ] T008 [P] Tests `tests/unit/domain/permissions.test.ts`; implement `src/domain/permissions.ts`
-- [ ] T009 Define `src/repositories/types.ts`; contract suite `tests/integration/repositories.contract.ts` (upsert create / conflict on stale version / null expectedVersion on existing → conflict / delete / list)
-- [ ] T010 [P] Implement `src/repositories/memory.ts`, `src/repositories/file.ts` (atomic write `.data/db.json`), `src/repositories/failing.ts`; runners `tests/integration/repositories.memory.test.ts`, `repositories.file.test.ts`
-- [ ] T011 [P] Tests + implement `src/auth/password.ts` (scrypt) and `src/auth/session.ts` (jose HS256, 8 h)
-- [ ] T012 Implement `src/lib/config.ts`, repository factory `src/repositories/index.ts`, admin seed `src/repositories/seed-admins.ts`
+- [X] T006 [P] Tests `tests/unit/domain/errors.test.ts`; implement `src/domain/errors.ts` (ValidationError, NotFoundError, ConflictError, ForbiddenError, UnauthorizedError, NotDeletableError, `toActionError`) + `src/lib/action-result.ts`
+- [X] T007 [P] Tests `tests/unit/domain/topic-schema.test.ts`; implement `src/domain/categories.ts` (8 fixed), `src/domain/levels.ts`, `src/domain/topic.ts` zod schema — title "required, trimmed, 1–150"; keywords "≤ 20 items, each trimmed 1–40, de-duplicated case-insensitive"; solution "required 1–5,000"; attachments "≤ 10, label 1–80, url starts with https://"
+- [X] T008 [P] Tests `tests/unit/domain/permissions.test.ts`; implement `src/domain/permissions.ts`
+- [X] T009 Define `src/repositories/types.ts`; contract suite `tests/integration/repositories.contract.ts` (upsert create / conflict on stale version / null expectedVersion on existing → conflict / delete / list)
+- [X] T010 [P] Implement `src/repositories/memory.ts`, `src/repositories/file.ts` (atomic write `.data/db.json`), `src/repositories/failing.ts`; runners `tests/integration/repositories.memory.test.ts`, `repositories.file.test.ts`
+- [ ] T011 [P] Tests `tests/unit/auth/password.test.ts`, `tests/unit/auth/session.test.ts`; implement `src/auth/password.ts` (scrypt, `scrypt$salt$key`, timing-safe) and `src/auth/session.ts` (jose HS256, 8 h, cookie `bgs_admin_session`, rejects unknown roles)
+- [ ] T012 Tests `tests/unit/config.test.ts`, `tests/unit/repositories-factory.test.ts`; implement `src/lib/config.ts` (DATA_BACKEND file|memory|failing|supabase, SESSION_SECRET ≥ 32 chars required in production, demo admins only when not production or `ALLOW_DEMO_ADMINS=true` — research R13), repository factory `src/repositories/index.ts`, demo admins `src/repositories/seed-admins.ts`
 - [ ] T013 [P] Thai strings `src/i18n/th.ts`; design tokens `src/app/globals.css`; root layout `src/app/layout.tsx` (IBM Plex Sans Thai)
 - [ ] T014 [P] Shared UI `src/components/ui/*` with tests `tests/unit/components/ui.test.tsx`
 - [ ] T015 [P] Hooks `src/hooks/use-debounce.ts`, `use-clipboard.ts` (blocked → `"blocked"` result), `use-local-storage.ts` (unavailable → no-op), `use-hotkey.ts` + tests `tests/unit/hooks/*.test.ts(x)`
@@ -53,7 +53,7 @@ implementation that follows. Commit after every task (XII).
 - [ ] T028 [P] [US3] Tests `tests/unit/services/topic-service.admin.test.ts` (save override on base, save custom, conflict, hide/show, restore base only, delete custom only → NotDeletableError for base, all require admin, list for admin with statuses); implement admin functions in `src/services/topic-service.ts`
 - [ ] T029 [US3] Integration tests `tests/integration/topic-actions.test.ts` (unauthorized without session, validation fieldErrors, conflict code); implement `src/app/actions/topic-actions.ts`, `src/app/actions/auth-actions.ts` (safe `next`)
 - [ ] T030 [US3] `proxy.ts` (redirect `/admin*` → `/login?next=`); `src/app/login/page.tsx` + `src/components/features/admin/login-form.tsx`
-- [ ] T031 [US3] Admin UI `src/components/features/admin/{topic-table,topic-form,attachments-editor,confirm-actions}.tsx` (filters by category/status + search, live preview using ContentRenderer, conflict message, double-confirm delete); pages `src/app/admin/page.tsx`, `src/app/admin/topics/new/page.tsx`, `src/app/admin/topics/[id]/page.tsx`
+- [ ] T031 [US3] Admin UI `src/components/features/admin/{topic-table,topic-form,attachments-editor,confirm-actions}.tsx` (attachments are https links only — research R12) (filters by category/status + search, live preview using ContentRenderer, conflict message, double-confirm delete); pages `src/app/admin/page.tsx`, `src/app/admin/topics/new/page.tsx`, `src/app/admin/topics/[id]/page.tsx`
 - [ ] T032 [US3] E2E `e2e/admin.spec.ts` (redirect to login, edit base → viewer sees → restore, hide/show, create custom with `<b>x</b>` → shown escaped, non-https rejected, delete custom needs two confirms)
 
 ## Phase 6: US4 — ไม่มีฐานข้อมูล (P4)
@@ -78,6 +78,10 @@ Setup → Foundational → US1 → (US2, US3 in either order) → US4 (needs US1
 ## Parallel examples
 
 Phase 2: T006/T007/T008/T011 together. US1: T016/T017/T018 together. US3: T027/T028.
+
+## Progress
+
+- 2026-11-16: Phase 1 complete (T001–T005); Phase 2 T006–T010 complete (52 tests green). Next: T011.
 
 ## Strategy
 

@@ -2,7 +2,10 @@ import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
 const NO_DB_PORT = 3101;
-const env = { SESSION_SECRET: "e2e-secret-e2e-secret-e2e-secret-123456" };
+const env = {
+  SESSION_SECRET: "e2e-secret-e2e-secret-e2e-secret-123456",
+  ALLOW_DEMO_ADMINS: "true",
+};
 
 export default defineConfig({
   testDir: "./e2e",
