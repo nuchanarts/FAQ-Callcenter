@@ -68,7 +68,7 @@ implementation that follows. Commit after every task (XII).
 
 - [X] T035 [P] Supabase adapter `src/repositories/supabase.ts` + `supabase/migrations/0001_init.sql` (RLS)
 - [X] T036 [P] `README.md` (run, test, admin demo, architecture, content review note, production)
-- [ ] T037 Full gate: lint, typecheck, coverage, build (first-load JS ≤ 200 KB gz), E2E; fix failures
+- [X] T037 Full gate: lint, typecheck, coverage, build (first-load JS ≤ 200 KB gz), E2E; fix failures
 - [ ] T038 Code review vs constitution I–XV + web-design-guidelines; apply fixes
 
 ## Dependencies
