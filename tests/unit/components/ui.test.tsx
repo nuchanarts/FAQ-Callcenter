@@ -73,6 +73,17 @@ describe("display primitives", () => {
   });
 });
 
+describe("PageSkeleton", () => {
+  it("announces loading politely and hides placeholder shapes from assistive tech", async () => {
+    const { PageSkeleton } = await import("@/components/ui/skeleton");
+    render(<PageSkeleton rows={3} />);
+    const status = screen.getByRole("status");
+    expect(status).toHaveAttribute("aria-busy", "true");
+    expect(status).toHaveTextContent("กำลังโหลด…");
+    expect(status.querySelectorAll("[aria-hidden='true'] > div")).toHaveLength(3);
+  });
+});
+
 describe("ConfirmDialog", () => {
   it("calls onConfirm or onCancel", async () => {
     const onConfirm = vi.fn();
