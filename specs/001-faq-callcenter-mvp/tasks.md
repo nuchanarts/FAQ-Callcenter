@@ -52,7 +52,7 @@ implementation that follows. Commit after every task (XII).
 - [X] T027 [P] [US3] Tests `tests/unit/services/auth-service.test.ts`; implement `src/services/auth-service.ts`, `src/auth/current-admin.ts` (`getAdmin`, `requireAdmin`)
 - [X] T028 [P] [US3] Tests `tests/unit/services/topic-service.admin.test.ts` (save override on base, save custom, conflict, hide/show, restore base only, delete custom only → NotDeletableError for base, all require admin, list for admin with statuses); implement admin functions in `src/services/topic-service.ts`
 - [X] T029 [US3] Integration tests `tests/integration/topic-actions.test.ts` (unauthorized without session, validation fieldErrors, conflict code); implement `src/app/actions/topic-actions.ts`, `src/app/actions/auth-actions.ts` (safe `next`)
-- [ ] T030 [US3] `proxy.ts` (redirect `/admin*` → `/login?next=`); `src/app/login/page.tsx` + `src/components/features/admin/login-form.tsx`
+- [X] T030 [US3] `src/proxy.ts` (redirect `/admin*` → `/login?next=`); `src/app/login/page.tsx` + `src/components/features/admin/login-form.tsx`
 - [ ] T031 [US3] Admin UI `src/components/features/admin/{topic-table,topic-form,attachments-editor,confirm-actions}.tsx` (attachments are https links only — research R12) (filters by category/status + search, live preview using ContentRenderer, conflict message, double-confirm delete); pages `src/app/admin/page.tsx`, `src/app/admin/topics/new/page.tsx`, `src/app/admin/topics/[id]/page.tsx`
 - [ ] T032 [US3] E2E `e2e/admin.spec.ts` (redirect to login, edit base → viewer sees → restore, hide/show, create custom with `<b>x</b>` → shown escaped, non-https rejected, delete custom needs two confirms)
 
