@@ -58,7 +58,7 @@ implementation that follows. Commit after every task (XII).
 
 ## Phase 6: US4 — ไม่มีฐานข้อมูล (P4)
 
-- [ ] T033 [US4] Notice `src/components/features/home/degraded-notice.tsx`; E2E `e2e/no-database.spec.ts` against a second webServer with `DATA_BACKEND=failing` (port 3101)
+- [X] T033 [US4] Notice `src/components/features/home/degraded-notice.tsx`; E2E `e2e/no-database.spec.ts` against a second webServer with `DATA_BACKEND=failing` (port 3101)
 
 ## Phase 7: US5 — วิธีใช้งาน (P5)
 
