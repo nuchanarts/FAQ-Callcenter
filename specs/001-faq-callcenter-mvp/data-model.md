@@ -1,78 +1,103 @@
-# Data Model: BGS FAQ Callcenter MVP
+# Data Model: Self-Service FAQ MVP
 
-Authoritative types and zod schemas live in `src/domain/`. This document is the
-design reference.
+Authoritative types and zod schemas live in `src/domain/`.
 
-## Category
+## Category (constant, `src/domain/categories.ts`)
 
-| Field | Type | Rules |
-|---|---|---|
-| id | string (uuid) | generated |
-| name | string | required, trimmed, 1–60 chars, unique case-insensitive |
-| sortOrder | integer | ≥ 0, default = count of categories |
-| createdAt / updatedAt | ISO timestamp | set by service |
+| id | name (TH) |
+|---|---|
+| `login` | เข้าสู่ระบบ / EHP Agent |
+| `authen` | ตรวจสอบสิทธิ / Authen Code |
+| `claim` | ส่งเคลม / ส่งออกข้อมูล |
+| `print` | การพิมพ์ / เครื่องพิมพ์ |
+| `drug` | ยา / คลังเวชภัณฑ์ |
+| `service` | บันทึกการให้บริการ |
+| `finance` | การเงิน / ค่าบริการ |
+| `registry` | ทะเบียนผู้ป่วย / แบบฟอร์ม |
 
-Delete is allowed only when no FAQ references the category (`CategoryInUseError`).
+## Level
 
-## FAQ
+`self` = ทำเองได้ · `partial` = ทำเองได้บางส่วน · `team` = ต้องแจ้งทีม
 
-| Field | Type | Rules |
-|---|---|---|
-| id | string (uuid) | generated |
-| question | string | required, trimmed, 1–300 chars |
-| answer | string | required, trimmed, 1–5,000 chars |
-| language | `"th" \| "en"` | required |
-| categoryId | string | required, must reference an existing Category |
-| tags | string[] | 0–10 items, each trimmed, 1–30 chars, de-duplicated case-insensitive |
-| status | `"draft" \| "published"` | new FAQs start `draft` |
-| version | integer | starts at 1, +1 on every update / status change |
-| createdAt / updatedAt | ISO timestamp | set by service |
-| updatedBy | string | display name of last editor |
+## TopicContent
 
-### State transitions
+| Field | Rules |
+|---|---|
+| title | required, trimmed, 1–150 chars |
+| categoryId | one of the 8 ids |
+| level | `self` \| `partial` \| `team` |
+| keywords | ≤ 20 items, each trimmed 1–40 chars, de-duplicated case-insensitive |
+| solution | required, trimmed, 1–5,000 chars (content format, see below) |
+| attachments | ≤ 10 × `{ kind: clip\|manual\|link, label 1–80, url starts with https:// }` |
+
+## Built-in topic (`src/content/base-topics.ts`, read-only)
+
+`{ id: "b-…", order, ...TopicContent }`
+
+## StoredTopic (repository)
+
+| Field | Rules |
+|---|---|
+| id | built-in id (override) or `c-<uuid>` (custom) |
+| origin | `base` \| `custom` |
+| content | TopicContent \| null (null = no override, base only) |
+| hidden | boolean |
+| version | integer ≥ 1, +1 per change |
+| updatedAt, updatedBy | set by service |
+
+## EffectiveTopic (derived, `mergeTopics()` in `src/domain/topics.ts`)
+
+`{ id, origin, status: "original" | "edited" | "custom", hidden, order, version, updatedAt?, updatedBy?, ...TopicContent }`
+
+Rules:
+- base without stored record → `original`, visible.
+- base with `content` → `edited`; with `content: null` but `hidden` → `original` hidden.
+- restore = set `content: null` (keeps hidden flag).
+- custom → `custom`; deletable (base never).
+- Viewer list = effective topics where `!hidden`, sorted by `order` (custom after base).
+
+## Report (never stored server-side)
+
+| Field | Rules |
+|---|---|
+| fullName | required ≤ 100 |
+| position | required ≤ 100 |
+| unitCode | required, digits only after removing spaces/dashes, exactly 5 |
+| unitName | required ≤ 150 |
+| phone | required, 9–15 digits (spaces, dashes, `+` allowed) |
+| email | optional, valid email |
+| anydesk | optional, 9–10 digits (spaces allowed) |
+| details | required ≤ 2,000 |
+
+`formatReportMessage()` output (exact order/labels, empty optional → `-`):
 
 ```
-          create            publish
-  (none) ───────▶ draft ─────────────▶ published
-                    ▲                       │
-                    └────── unpublish ──────┘
-  delete is allowed from either state (admin + confirmation)
+ชื่อ - สกุล ผู้แจ้ง: <fullName>
+ตำแหน่งงาน : <position>
+รหัสหน่วยงาน 5 หลัก : <unitCode>
+ชื่อหน่วยงาน : <unitName>
+เบอร์ติดต่อ : <phone>
+อีเมล : <email|->
+เลข AnyDesk : <anydesk|->
+รายละเอียดปัญหา : <details>
 ```
 
-Updates require `expectedVersion === version`, otherwise `ConflictError`.
+Browser-only key `bgs-faq.reporter` (localStorage) stores reporter fields except
+`details`.
 
-## User
+## Content format (`src/domain/content-format.ts`)
 
-| Field | Type | Rules |
-|---|---|---|
-| id | string | generated |
-| email | string | unique, lower-cased |
-| displayName | string | 1–80 chars |
-| role | `"agent" \| "admin"` | required |
-| passwordHash | string | scrypt `salt:hash` (local provider only; never leaves repositories) |
+Parsed to an AST rendered as React elements (escaping guaranteed, no `dangerouslySetInnerHTML`):
+`1. ` ordered item · `- ` bullet · `> ` note box · `**bold**` · `` `menu path` `` ·
+`[text](https://…)` (non-https → plain text).
 
-## Session (cookie, not stored)
+## Admin user
 
-`{ userId, email, displayName, role, exp }` — signed HS256, 8 h expiry.
+`{ id, email (unique, lower-case), displayName, role: owner|editor, passwordHash }`.
+Demo: `admin@bgs.local` / `Admin#2026` (owner), `editor@bgs.local` / `Editor#2026`.
 
-## Search result (derived)
+## Supabase mapping
 
-`{ faq, score, matchedFields: ("question"|"tags"|"answer")[], snippet }` — produced by
-`rankFaqs()` in `src/domain/search.ts`.
-
-## Seed data
-
-`src/repositories/seed.ts`: 6 categories (Appointments/นัดหมาย, Billing & Insurance,
-Visiting hours, Parking & Directions, Services & Clinics, General) and ~20 bilingual
-FAQs, plus demo users:
-
-| Email | Password | Role |
-|---|---|---|
-| agent@bgs.local | Agent#2026 | agent |
-| admin@bgs.local | Admin#2026 | admin |
-
-## Supabase mapping (production)
-
-Tables `categories`, `faqs`, `profiles(id → auth.users, display_name, role)`.
-RLS: authenticated users `select` published FAQs and all categories; users with
-`profiles.role = 'admin'` have full access. See `supabase/migrations/0001_init.sql`.
+`topics(id text pk, origin, content jsonb null, hidden, version, updated_at, updated_by)`,
+`admin_profiles(id → auth.users, display_name, role)`. RLS: `anon`/`authenticated` select
+on `topics`; writes only for admins. Built-in content stays in code.

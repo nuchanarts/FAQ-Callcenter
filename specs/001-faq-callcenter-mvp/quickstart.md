@@ -1,44 +1,33 @@
-# Quickstart & Validation: BGS FAQ Callcenter MVP
+# Quickstart & Validation: Self-Service FAQ MVP
 
 ## Prerequisites
 
-- Node.js 22+ and npm 10+
-- No database needed for local use (file-backed store in `.data/`).
+Node.js 22+, npm 10+. No database needed (file store in `.data/`).
 
 ## Run
 
 ```bash
 npm install
-cp .env.example .env.local   # optional; sensible defaults are built in
-npm run dev                  # http://localhost:3000
+npm run dev            # http://localhost:3000
 ```
 
-Demo accounts: `agent@bgs.local` / `Agent#2026`, `admin@bgs.local` / `Admin#2026`.
+Admin demo: `admin@bgs.local` / `Admin#2026`.
 
 ## Verify
 
 | Command | Expected |
 |---|---|
-| `npm run lint` | 0 errors |
-| `npm run typecheck` | 0 errors |
-| `npm test` | all unit + integration tests pass |
-| `npm run test:coverage` | ≥ 80% global, ≥ 90% `src/domain` & `src/services` |
-| `npx playwright install chromium && npm run test:e2e` | all E2E specs pass |
-| `npm run build` | production build succeeds |
+| `npm run lint` / `npm run typecheck` | 0 errors |
+| `npm test` | all unit + integration pass |
+| `npm run test:coverage` | ≥ 80% global, ≥ 90% `src/domain`, `src/services` |
+| `npx playwright install chromium && npm run test:e2e` | all E2E pass (desktop + 360 px) |
+| `npm run build` | succeeds; first-load JS per route ≤ 200 KB gz |
 
 ## Manual scenarios
 
-1. **US1**: sign in as agent → press `/` → type `จอดรถ` → `↓` `Enter` → press `c` →
-   "Copied" toast; paste shows the answer.
-2. **US2**: sign in as admin → Admin → New FAQ → save (draft) → Publish → sign in as
-   agent → search finds it → admin unpublishes → agent no longer finds it.
-3. **US3**: as agent open `/admin` → "no permission" page; sign out → `/` redirects to
-   `/login`.
-4. **US4**: open "How to use"; press `?` on search screen → shortcut panel.
-5. **US5**: switch EN/TH in the header → reload → language kept.
-
-## Production (Supabase)
-
-Apply `supabase/migrations/*.sql`, then set `DATA_BACKEND=supabase`,
-`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `SESSION_SECRET`
-(see `.env.example`).
+1. Signed out: home shows 3 basic steps → type `ออเทน` → expand → numbered steps + level.
+2. Press "ยังไม่ได้" → form prefilled → fill → "สร้างข้อความ" → "คัดลอกข้อความ".
+3. `/admin` → sign in → edit a built-in topic → home shows new title → "คืนค่าเดิม".
+4. Hide a topic → disappears from home → "แสดง".
+5. Add a topic containing `<b>x</b>` → home shows literal text.
+6. `DATA_BACKEND=failing npm run dev` → home shows built-in topics + notice; form works.

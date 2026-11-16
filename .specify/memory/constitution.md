@@ -1,252 +1,295 @@
 <!--
 SYNC IMPACT REPORT
 ==================
-Version change: (none) → 1.0.0
-Bump rationale: Initial ratification of the project constitution (MAJOR baseline).
+Version change: 1.0.0 → 2.0.0
+Bump rationale: MAJOR — product principles from the Call Center team's constitution
+(c:\Users\MS-10\Desktop\constitution.md) were adopted as Principles I–VII. The
+engineering principles of v1.0.0 were kept and renumbered VIII–XV; v1 Principle III
+(Thai/English i18n) was redefined as Thai-first.
 
-Principles added:
-  I.    Code Quality (NON-NEGOTIABLE)
-  II.   Test-Driven Development (NON-NEGOTIABLE)
-  III.  User Experience Consistency
-  IV.   Performance Requirements
-  V.    Commit Discipline
-  VI.   Reuse First (Shared Components & Functions)
-  VII.  Centralized Business Logic
-  VIII. Skill-Assisted Development
+Principles:
+  I.    Self-Service First (new, from Desktop constitution)
+  II.   Evidence-Based Content (new)
+  III.  ข้อมูลครบตั้งแต่ข้อความแรก (new)
+  IV.   ภาษาไทยที่เจ้าหน้าที่หน้างานเข้าใจ (new)
+  V.    ความปลอดภัยและความเป็นส่วนตัว (new)
+  VI.   สิทธิ์การแก้ไขชัดเจน (new)
+  VII.  เรียบง่าย ใช้ได้บนทุกอุปกรณ์ (new)
+  VIII. Code Quality            (was I)
+  IX.   Test-Driven Development (was II)
+  X.    UX Consistency          (was III; i18n → Thai-first centralized strings)
+  XI.   Performance             (was IV)
+  XII.  Commit Discipline       (was V)
+  XIII. Reuse First             (was VI)
+  XIV.  Centralized Business Logic (was VII)
+  XV.   Skill-Assisted Development (was VIII)
 
-Sections added:
-  - Quality Gates
-  - Development Workflow
-  - Governance
-
-Sections removed: none
+Sections added: Mission & metrics, Content Standards, Content Workflow.
 
 Templates requiring updates:
-  ✅ .specify/templates/plan-template.md   — "Constitution Check" gates are derived from
-     this file at plan time; /speckit-plan MUST evaluate Principles I–VIII.
-  ✅ .specify/templates/spec-template.md   — compatible; user stories carry testable
-     acceptance criteria (Principle II); add UX/perf requirements (III–IV) per spec.
-  ✅ .specify/templates/tasks-template.md  — compatible; under Principle II, test tasks
-     are MANDATORY (not optional) and precede implementation; commit per task (V).
+  ✅ .specify/templates/*.md — generic; gates derived from this file at plan time.
+  ⚠ specs/001-faq-callcenter-mvp/{spec,plan,tasks}.md — MUST be regenerated for v2
+     (previous version assumed login-only call-center agents and TH/EN UI).
 
 Deferred TODOs: none
 -->
 
-# BGS FAQ Callcenter Constitution
+# Constitution: ศูนย์ช่วยเหลือ ระบบคลาวด์กลาง (Self-Service FAQ App)
 
-The BGS FAQ Callcenter application helps hospital call-center staff find accurate,
-consistent answers quickly while a caller is on the line. Wrong, slow, or inconsistent
-answers have direct patient-facing consequences. Every principle below exists to
-protect correctness, speed, and consistency of that experience.
+> เอกสารหลักการของโปรเจกต์ ใช้เป็นกรอบตัดสินใจสำหรับทุกการพัฒนา การแก้ไขเนื้อหา และการเพิ่มฟีเจอร์
+> ทั้งทีมพัฒนา ทีม Call Center และ AI Agent ที่ช่วยพัฒนาต้องยึดถือเอกสารนี้
 
-## Core Principles
+---
 
-### I. Code Quality (NON-NEGOTIABLE)
+## พันธกิจ (Mission)
 
-- Code MUST pass the project's linter, formatter, and type checker with zero errors
-  before it is committed. Warnings MUST NOT be suppressed without an inline
-  justification comment.
-- Strict typing MUST be enabled (e.g., TypeScript `strict: true`). Use of `any` (or the
-  language equivalent) is prohibited except at untyped external boundaries, where the
-  value MUST be validated and narrowed immediately.
-- Functions SHOULD do one thing, stay under ~40 lines, and have at most 3 levels of
-  nesting. Files over ~300 lines MUST be split by responsibility.
-- Names MUST describe intent (domain language from the call-center/FAQ domain), not
-  implementation. No magic numbers or strings — use named constants.
-- Errors MUST NOT be swallowed silently. Every caught error is either handled with a
-  user-meaningful outcome or re-thrown/logged with context.
-- Dead code, commented-out code, and unused dependencies MUST be removed, not left
-  behind.
+ลดภาระทีม Call Center ด้วยการให้เจ้าหน้าที่ รพ.สต. **แก้ปัญหาที่พบบ่อยได้ด้วยตัวเอง** และเมื่อจำเป็นต้องแจ้งทีม ต้อง**แจ้งด้วยข้อมูลที่ครบตั้งแต่ข้อความแรก** เพื่อให้แก้ไขหรือรีโมทได้ทันที
 
-**Rationale**: A call-center tool is maintained for years by changing staff; readable,
-typed, lint-clean code is the cheapest defense against regressions.
+### ตัวชี้วัดความสำเร็จ
 
-### II. Test-Driven Development (NON-NEGOTIABLE)
+| ตัวชี้วัด | ค่าตั้งต้น (มี.ค.–พ.ย. 2569) | เป้าหมาย |
+|---|---|---|
+| จำนวนเคสต่อเดือน ใน 6 ปัญหาหลัก | 46% ของเคสทั้งหมด | ลดลง 30% ภายใน 6 เดือน |
+| เคสที่ข้อมูลไม่ครบ / ติดต่อกลับไม่ได้ | ~940 เคส (≈4.6%) | ต่ำกว่า 1% |
+| เคสที่แก้ได้ด้วย 3 ขั้นพื้นฐาน | ~2,000 เคส (≈10%) | ลูกค้าแก้เองได้ ไม่ต้องแจ้งเข้ามา |
 
-- The Red → Green → Refactor cycle is mandatory for all features and bug fixes:
-  1. Write a failing test that expresses the requirement or reproduces the bug.
-  2. Run it and confirm it fails for the expected reason.
-  3. Write the minimum code to make it pass.
-  4. Refactor with all tests green.
-- No production code may be written without a failing test that demands it.
-- Every bug fix MUST include a regression test that failed before the fix.
-- Test layers:
-  - **Unit tests** for all centralized business logic (Principle VII) — target ≥ 90%
-    line and branch coverage for the domain/service layer.
-  - **Integration/contract tests** for every API endpoint, data-access function, and
-    external integration.
-  - **End-to-end tests** for each primary user journey (e.g., search FAQ → open answer
-    → copy/read answer to caller; admin create/edit/publish FAQ).
-- Overall project coverage MUST NOT drop below 80%; a change that lowers coverage MUST
-  be justified in the commit message.
-- Tests MUST be deterministic, isolated, and fast (unit suite < 30 s). Flaky tests are
-  treated as bugs and fixed or quarantined within one working day.
+---
 
-**Rationale**: Callers receive answers derived from this system; tests written first
-are the only reliable proof that the answer logic is correct.
+## Part A — หลักการด้านผลิตภัณฑ์ (Product Principles)
 
-### III. User Experience Consistency
+### I. Self-Service First: แก้เองได้ก่อนแจ้ง
 
-- All UI MUST be built from the shared design system / component library
-  (Principle VI). One-off styling of buttons, inputs, dialogs, tables, or typography is
-  prohibited.
-- Visual tokens (colors, spacing, typography, radii, shadows) MUST come from a single
-  centralized theme/token source. Hard-coded values in components are prohibited.
-- Interaction patterns MUST be uniform across the app: the same action (search, copy
-  answer, save, delete, confirm) looks and behaves the same everywhere, including
-  keyboard shortcuts.
-- Every data view MUST define consistent **loading**, **empty**, **error**, and
-  **success** states using shared components.
-- All user-facing text MUST come from a centralized strings/i18n source (supporting
-  Thai and English) — no inline literal UI copy.
-- Accessibility MUST meet WCAG 2.1 AA: full keyboard operability (call-center agents
-  work keyboard-first), visible focus, sufficient contrast, and semantic labels.
-- Destructive actions MUST require confirmation; user input MUST never be lost on
-  validation error.
+- ทุกหัวข้อปัญหาต้องบอก**ขั้นตอนที่ทำได้จริง**ก่อนเสมอ ไม่ใช่แค่ "ติดต่อทีมงาน"
+- ทุกหัวข้อต้องมีป้ายระดับที่ตรงกับความจริง: `ทำเองได้` / `ทำเองได้บางส่วน` / `ต้องแจ้งทีม`
+- ถ้าทำตามแล้วไม่หาย ต้องมีทางไปต่อทันที (ปุ่ม "ยังไม่ได้" → แบบฟอร์มแจ้งปัญหา พร้อมกรอกหัวข้อให้)
+- "3 ขั้นก่อนแจ้งปัญหา" (ล้างแคช / ตรวจ EHP Agent / เข้าผ่าน SSO) ต้องอยู่ตำแหน่งที่เห็นได้ทันที
 
-**Rationale**: Agents switch rapidly between screens under time pressure; consistency
-reduces cognitive load and error rate.
+### II. Evidence-Based Content: เนื้อหามาจากเคสจริง
 
-### IV. Performance Requirements
+- หัวข้อ ลำดับความสำคัญ และวิธีแก้ ต้องอ้างอิงจาก**รายงานเคส Call Center** ไม่ใช่การคาดเดา
+- หมวดที่มีเคสมากต้องได้รับการดูแลเนื้อหาก่อน (Authen, เข้าระบบ, สติกเกอร์ยา, ตรวจสิทธิ, คีย์ยา, ส่งออกข้อมูล)
+- ทบทวนการจัดกลุ่มปัญหาจากรายงานเคส**ทุกเดือน** และปรับหัวข้อตามข้อมูลล่าสุด
+- ตัวเลขสถิติที่แสดงต้องระบุช่วงเวลาและแหล่งที่มา
 
-The following budgets are mandatory and MUST be verified before a feature is marked
-done:
+### III. ข้อมูลครบตั้งแต่ข้อความแรก
+
+- แบบฟอร์มแจ้งปัญหาต้องสร้างข้อความตาม**รูปแบบมาตรฐานของทีม**เท่านั้น:
+  ```
+  ชื่อ - สกุล ผู้แจ้ง:
+  ตำแหน่งงาน :
+  รหัสหน่วยงาน 5 หลัก :
+  ชื่อหน่วยงาน :
+  เบอร์ติดต่อ :
+  อีเมล :
+  เลข AnyDesk :
+  รายละเอียดปัญหา :
+  ```
+- ช่องบังคับ: ชื่อ, ตำแหน่ง, รหัสหน่วยงาน (ตัวเลข 5 หลัก), ชื่อหน่วยงาน, เบอร์ติดต่อ, รายละเอียดปัญหา
+- การเปลี่ยนรูปแบบข้อความต้องได้รับความเห็นชอบจากหัวหน้าทีม Call Center ก่อน
+
+### IV. ภาษาไทยที่เจ้าหน้าที่หน้างานเข้าใจ
+
+- เขียนเป็นภาษาไทยที่ใช้จริงในหน้างาน ใช้คำที่ผู้ใช้พิมพ์ค้นหา (เช่น "ออเทน", "ปริ้นสติ๊กเกอร์") เป็นคำค้นเพิ่มเติม
+- ขั้นตอนต้องเป็น**ลำดับเลข ทีละการกระทำ** ระบุเส้นทางเมนูแบบ `Setting › Organization › ผู้ใช้งาน`
+- หลีกเลี่ยงศัพท์เทคนิคฝั่งระบบ (ชื่อตาราง, SQL, ชื่อฟิลด์) ในเนื้อหาที่ลูกค้าเห็น
+- หนึ่งหัวข้อ = หนึ่งอาการ ชื่อหัวข้อขึ้นต้นด้วย**อาการที่ผู้ใช้เห็น** ไม่ใช่ชื่อสาเหตุ
+
+### V. ความปลอดภัยและความเป็นส่วนตัว
+
+- **ห้าม**เก็บหรือแสดงข้อมูลผู้ป่วย (ชื่อ, HN, เลขบัตรประชาชน) ในแอป ในคลิป หรือในภาพหน้าจอคู่มือ ภาพที่ใช้ต้องปิดบังข้อมูลส่วนบุคคลก่อนอัปโหลด
+- **ห้าม**ใส่ Token, รหัสผ่าน, Provider ID หรือค่าลับใด ๆ ในเนื้อหา
+- ข้อมูลผู้แจ้งที่ "จำไว้ในเครื่อง" เก็บเฉพาะในเบราว์เซอร์ของผู้ใช้เท่านั้น ไม่ส่งขึ้นเซิร์ฟเวอร์
+- เนื้อหาที่ Admin กรอกต้องถูก escape ก่อนแสดงผลเสมอ ห้ามแสดงเป็น HTML ดิบ
+- ลิงก์ภายนอกต้องเป็น `https://` เท่านั้น
+
+### VI. สิทธิ์การแก้ไขชัดเจน
+
+- **ลูกค้า (Viewer):** ดู ค้นหา และสร้างข้อความแจ้งปัญหาได้ แก้ไขเนื้อหาไม่ได้
+- **Admin (Owner / Editor):** แก้ไขทุกหัวข้อ เพิ่มหัวข้อใหม่ แนบคลิป/คู่มือ ซ่อนหรือคืนค่าเดิมได้
+- หัวข้อต้นฉบับ**ไม่ถูกลบ** ทำได้เพียงแก้ไข (override) ซ่อน หรือคืนค่าเดิม เพื่อย้อนกลับได้เสมอ
+- การลบที่ย้อนกลับไม่ได้ (ลบไฟล์, ลบหัวข้อที่เพิ่มเอง) ต้องกดยืนยันสองครั้ง
+
+### VII. เรียบง่าย ใช้ได้บนทุกอุปกรณ์
+
+- ต้องใช้งานได้บนคอมพิวเตอร์ของ รพ.สต. และมือถือ (หน้าจอกว้าง ≥ 360px)
+- เนื้อหาหลัก (FAQ + แบบฟอร์ม) ต้อง**ใช้ได้แม้ไม่มีฐานข้อมูล** เช่น ผู้ใช้ไม่ได้ล็อกอิน หรือเชื่อมต่อฐานข้อมูลไม่ได้
+- ไฟล์แนบไม่เกิน 20 MB คลิปที่ยาวกว่านั้นให้ใช้ลิงก์ YouTube (Unlisted) หรือ Google Drive
+- ไม่เพิ่มฟีเจอร์ที่ไม่ช่วยลดจำนวนเคสหรือลดเวลาแก้ปัญหา
+
+---
+
+## Part B — หลักการด้านวิศวกรรม (Engineering Principles)
+
+### VIII. Code Quality (NON-NEGOTIABLE)
+
+- Code MUST pass linter, formatter, and type checker with zero errors before commit;
+  suppressed warnings need an inline justification.
+- TypeScript `strict` MUST be on; `any` is prohibited except at validated external
+  boundaries.
+- Functions SHOULD stay under ~40 lines and 3 nesting levels; files over ~300 lines MUST
+  be split by responsibility. No magic numbers/strings — use named constants.
+- Errors MUST NOT be swallowed; each is handled with a user-meaningful outcome or logged
+  with context. Dead and commented-out code MUST be removed.
+
+### IX. Test-Driven Development (NON-NEGOTIABLE)
+
+- Red → Green → Refactor is mandatory: write a failing test, confirm it fails, write the
+  minimum code, refactor while green. Every bug fix includes a regression test.
+- Layers: **unit** (domain/services ≥ 90% coverage), **integration** (route handlers,
+  server actions, repository contract suite), **E2E** for every primary journey.
+- E2E MUST cover the release checklist: ค้นหา, เปิด-ปิดหัวข้อ, สร้างข้อความแจ้งปัญหา,
+  แก้ไขในโหมด Admin, แสดงผลบนมือถือ, ใช้งานแบบไม่มีฐานข้อมูล/ไม่ล็อกอิน, และ escape
+  อักขระพิเศษ/แท็ก HTML.
+- Overall coverage MUST stay ≥ 80%; tests MUST be deterministic and fast (unit < 30 s).
+
+### X. User Experience Consistency
+
+- All UI MUST use the shared component library and centralized design tokens; one-off
+  styling of shared patterns is prohibited.
+- The same action looks and behaves the same everywhere; every data view has shared
+  loading / empty / error / success states.
+- All UI text MUST come from the centralized Thai strings module — no inline literals.
+- WCAG 2.1 AA: keyboard operable, visible focus, sufficient contrast, semantic labels.
+  User input MUST never be lost on validation error.
+
+### XI. Performance Requirements
 
 | Metric | Budget |
 |---|---|
-| FAQ search results (server, p95) | ≤ 300 ms |
-| Any read API endpoint (p95) | ≤ 500 ms |
-| Any write API endpoint (p95) | ≤ 1 s |
-| Largest Contentful Paint (agent workstation) | ≤ 2.5 s |
+| Search results update after typing (p95) | ≤ 300 ms |
+| Read API / page server time (p95) | ≤ 500 ms |
+| Largest Contentful Paint (รพ.สต. PC / mid-range phone, 4G) | ≤ 2.5 s |
 | Interaction to Next Paint | ≤ 200 ms |
 | Cumulative Layout Shift | ≤ 0.1 |
-| Initial JS bundle (gzipped) per route | ≤ 200 KB |
+| First-load JS per route (gzipped) | ≤ 200 KB |
 
-- Database queries MUST be indexed for their access patterns; N+1 queries are
-  prohibited. Lists MUST be paginated or virtualized.
-- Search input MUST be debounced, and repeated reads SHOULD be cached with explicit
-  invalidation on content change.
-- A change that regresses any budget MUST NOT be merged without a documented,
-  approved exception and a follow-up task.
+Lists over 50 items MUST paginate or virtualize; no N+1 queries. A regression MUST NOT
+merge without an approved exception.
 
-**Rationale**: Every second an agent waits is a second a patient waits on the phone.
+### XII. Commit Discipline
 
-### V. Commit Discipline
+- Commit after every completed TDD cycle or task; never leave working state uncommitted.
+- Commits are atomic, build, pass tests, and follow Conventional Commits.
+- Work on feature branches; merge to `main` only after Quality Gates pass.
+- Secrets, `.env*`, and any patient data MUST never be committed.
+- Pre-commit hooks MUST run lint, format, type check, and related tests; `--no-verify`
+  is prohibited.
 
-- Commit early and often: every completed TDD cycle (test + passing implementation),
-  refactor, or task MUST be committed before starting the next one. Never leave a
-  working state uncommitted.
-- Each commit MUST be atomic (one logical change), build successfully, and pass the
-  test suite.
-- Commit messages MUST follow Conventional Commits
-  (`feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`, `perf:`), describing *why*
-  as well as *what*.
-- Work MUST happen on a feature branch, never directly on `main`. Merge to `main` only
-  after all Quality Gates pass.
-- Secrets, credentials, `.env` files, and patient or personal data MUST never be
-  committed. `.gitignore` MUST cover them from the first commit.
-- Pre-commit hooks MUST run lint, format, type check, and affected tests. Hooks MUST
-  NOT be bypassed (`--no-verify` is prohibited).
+### XIII. Reuse First (Shared Components & Functions)
 
-**Rationale**: Small, frequent, verified commits make every mistake easy to find,
-review, and revert.
+- Search for an existing component/hook/utility before writing a new one.
+- Anything used in 2+ places MUST be extracted into a shared, tested module.
+- Shared UI components are presentational and MUST NOT embed business rules.
 
-### VI. Reuse First (Shared Components & Functions)
+### XIV. Centralized Business Logic
 
-- Before writing any new component, hook, utility, or service, developers MUST search
-  the codebase for an existing one and extend it if it fits.
-- Any UI pattern or logic used in 2 or more places MUST be extracted into a shared,
-  documented, tested module (rule of two — do not copy-paste a third time).
-- Shared code lives in clearly designated locations (e.g., `components/ui`,
-  `lib/` or `shared/`, `hooks/`) with a single public entry point per module.
-- Shared components MUST be presentational and configurable via props; they MUST NOT
-  embed business rules (see Principle VII).
-- Each shared module MUST have its own tests and a short usage example (doc comment or
-  story).
+- All rules (topic merge/override/hide/restore, search ranking, report-message format and
+  validation, permissions, link and attachment rules) MUST live in the domain/service
+  layer — one authoritative implementation per rule.
+- Pages, route handlers, and server actions MUST be thin: parse → call service → render.
+- Validation schemas are defined once and shared between client and server.
+- Storage goes through repository interfaces; the domain layer has no framework
+  dependencies.
 
-**Rationale**: Reuse keeps the UI consistent (Principle III) and means a fix in one
-place fixes it everywhere.
+### XV. Skill-Assisted Development
 
-### VII. Centralized Business Logic
+Use the matching Claude Code skills/agents rather than working ad hoc:
+`superpowers:brainstorming` + Spec Kit for design; `superpowers:test-driven-development`
+for implementation; `superpowers:systematic-debugging` for failures;
+`frontend-design`, `web-design-guidelines`, `vercel-react-best-practices` for UI;
+Playwright for E2E; `superpowers:verification-before-completion` before claiming done;
+`code-review` / `simplify` / `security-review` before merge. Check library APIs against
+current docs, not memory. The constitution wins over any skill guidance.
 
-- All business rules (FAQ categorization, visibility/publishing rules, answer
-  versioning, search ranking, permissions/roles, validation, audit rules) MUST live in
-  a dedicated domain/service layer — one authoritative implementation per rule.
-- UI components, route handlers, and API controllers MUST be thin: they parse input,
-  call the domain/service layer, and render/return the result. They MUST NOT contain
-  business decisions.
-- Validation schemas MUST be defined once and shared between client and server.
-- Data access MUST go through a repository/data-access layer; the domain layer MUST
-  NOT depend on UI or framework specifics, so it can be unit-tested in isolation.
-- Configuration and constants governing business behavior MUST be centralized, not
-  scattered across files.
+---
 
-**Rationale**: When a hospital policy changes, it must change in exactly one place and
-be covered by exactly one set of tests.
+## มาตรฐานเนื้อหา (Content Standards)
 
-### VIII. Skill-Assisted Development
+### โครงสร้างหัวข้อปัญหา
 
-Developers (human or AI) MUST use the available Claude Code skills and agents that fit
-the task, instead of working ad hoc:
-
-| Activity | Skill / Agent |
+| ส่วน | ข้อกำหนด |
 |---|---|
-| New feature or behavior design | `superpowers:brainstorming`, then Spec Kit (`/speckit.specify`, `/speckit.plan`, `/speckit.tasks`) |
-| Writing an implementation plan | `superpowers:writing-plans` |
-| Implementing any feature or fix | `superpowers:test-driven-development` |
-| Any bug or failing test | `superpowers:systematic-debugging` |
-| UI work | `frontend-design:frontend-design`, `vercel:shadcn`, `vercel:react-best-practices` |
-| Framework specifics | `vercel:nextjs`, `supabase:supabase`, `supabase:supabase-postgres-best-practices` (as applicable to the chosen stack) |
-| Before claiming done | `superpowers:verification-before-completion` |
-| Before merge | `superpowers:requesting-code-review` / `code-review`, `simplify`, `security-review` |
-| Committing | `commit-commands:commit` |
+| คำถาม / อาการ | สิ่งที่ผู้ใช้เห็นบนหน้าจอ เช่น "ขอ Authen Code ไม่ได้ / อ่านบัตรไม่ได้" |
+| หมวด | เลือกจาก 8 หมวดหลักเท่านั้น |
+| ระดับ | ทำเองได้ / ทำเองได้บางส่วน / ต้องแจ้งทีม |
+| คำค้นเพิ่มเติม | คำพ้อง คำสะกดผิดที่พบบ่อย ภาษาอังกฤษ |
+| วิธีแก้ | ขั้นตอนลำดับเลข + กล่อง `>` "ถ้ายังไม่ได้" บอกว่าต้องเตรียมอะไรก่อนแจ้งทีม |
+| คลิป / คู่มือ | ไม่บังคับ แต่ควรมีสำหรับ 10 ปัญหาที่พบบ่อยที่สุด |
 
-- Library and framework APIs MUST be checked against current documentation (e.g.,
-  Context7 or official docs) rather than memory.
-- If a skill's guidance conflicts with this constitution, the constitution wins.
+### หมวดหลัก
 
-**Rationale**: Skills encode proven workflows; using them consistently raises the
-quality floor and keeps the process repeatable.
+1. เข้าสู่ระบบ / EHP Agent
+2. ตรวจสอบสิทธิ / Authen Code
+3. ส่งเคลม / ส่งออกข้อมูล
+4. การพิมพ์ / เครื่องพิมพ์
+5. ยา / คลังเวชภัณฑ์
+6. บันทึกการให้บริการ
+7. การเงิน / ค่าบริการ
+8. ทะเบียนผู้ป่วย / แบบฟอร์ม
 
-## Quality Gates
+การเพิ่มหรือเปลี่ยนหมวดหลักต้องแก้ไขเอกสารนี้ (ดู Governance)
 
-A change may be merged to `main` only when ALL of the following pass:
+### รูปแบบการเขียนคำตอบ
 
-1. Lint, format, and type check — zero errors.
-2. All unit, integration, and E2E tests pass; coverage thresholds (Principle II) met.
-3. Performance budgets (Principle IV) verified for affected routes/endpoints.
-4. Accessibility check (automated axe scan + keyboard walkthrough) for UI changes.
-5. Code review completed, confirming compliance with Principles I–VIII — especially
-   no duplicated logic (VI) and no business logic outside the domain layer (VII).
-6. Security review for changes touching auth, permissions, data access, or
-   user-supplied input.
+```
+1. ขั้นตอน            → ลำดับขั้น
+- ข้อ                  → หัวข้อย่อย
+> ข้อความ             → กล่องหมายเหตุ
+**ตัวหนา**             → เน้น
+`Setting › เมนู`       → เส้นทางเมนู
+[ข้อความ](https://...) → ลิงก์
+```
 
-## Development Workflow
+### มาตรฐานคลิปและคู่มือ
 
-1. **Specify** — capture the feature with `/speckit.specify`; clarify ambiguity with
-   `/speckit.clarify`.
-2. **Plan** — `/speckit.plan`; the plan's Constitution Check MUST pass (or list
-   justified exceptions in Complexity Tracking).
-3. **Tasks** — `/speckit.tasks`; test tasks precede implementation tasks.
-4. **Implement** — on a feature branch, per task: failing test → commit → implement →
-   green → refactor → commit.
-5. **Verify** — run the full suite, budgets, and accessibility checks; collect
-   evidence before claiming completion.
-6. **Review & Merge** — code review against this constitution, then merge.
+- คลิปยาว **1–3 นาที** ต่อหนึ่งปัญหา แสดงหน้าจอจริงตั้งแต่ต้นจนแก้ได้
+- ชื่อคลิปขึ้นต้นด้วยสิ่งที่ทำ เช่น "วิธีติดตั้ง secureagent 1.1.3"
+- PDF คู่มือระบุวันที่และเวอร์ชันของระบบที่ใช้อ้างอิง
+- ตรวจว่าไม่มีข้อมูลผู้ป่วยหรือค่าลับในภาพก่อนอัปโหลดทุกครั้ง
 
-## Governance
+---
 
-- This constitution supersedes all other practices, conventions, and tool guidance in
-  this project. Where any document conflicts with it, the constitution prevails.
-- Amendments require: a written proposal stating the change and rationale, approval by
-  the project owner, a version bump, an updated Sync Impact Report, and propagation to
-  dependent templates and docs in the same commit.
-- Versioning follows semantic versioning:
-  - **MAJOR** — removal or backward-incompatible redefinition of a principle.
-  - **MINOR** — a new principle or section, or materially expanded guidance.
-  - **PATCH** — clarifications, wording, or typo fixes with no semantic change.
-- Every plan and code review MUST verify compliance. Any deviation MUST be documented
-  with justification and the simpler alternative that was rejected.
-- Compliance is reviewed at least once per release milestone.
+## กระบวนการทำงาน (Workflow)
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16
+### การอัปเดตเนื้อหา
+
+1. **ทุกสัปดาห์:** Admin ตรวจเคสใหม่ ถ้าพบปัญหาเดิมซ้ำ ≥ 5 เคส และยังไม่มีในแอป ให้เพิ่มหัวข้อ
+2. **เมื่อระบบเปลี่ยน:** (เมนูย้าย, เวอร์ชันใหม่, นโยบาย สปสช. เปลี่ยน) แก้หัวข้อที่เกี่ยวข้องภายใน 2 วันทำการ
+3. **ทุกเดือน:** ทบทวนสถิติเคสตามหมวด เทียบกับเดือนก่อน และปรับลำดับความสำคัญของเนื้อหา
+4. **หลังแก้ไขผ่าน Admin:** เผยแพร่เนื้อหาเข้าหน้าหลัก เพื่อให้ผู้ใช้ที่ไม่ได้ล็อกอินเห็นด้วย
+
+### การพัฒนาฟีเจอร์
+
+1. ทุกฟีเจอร์ใหม่ต้องตอบได้ว่า **"ลดเคสหรือลดเวลาแก้ปัญหาอย่างไร"**
+2. Spec Kit flow: `/speckit-specify` → `/speckit-plan` → `/speckit-tasks` → `/speckit-analyze` → `/speckit-implement`, on a feature branch, TDD per task, commit per task.
+3. ทดสอบก่อนเผยแพร่: ค้นหา, เปิด-ปิดหัวข้อ, สร้างข้อความแจ้งปัญหา, แก้ไขในโหมด Admin, แสดงผลบนมือถือ
+4. ทดสอบกรณีไม่มีฐานข้อมูล (ผู้ใช้ไม่ได้ล็อกอิน) ว่ายังใช้ FAQ และแบบฟอร์มได้
+5. ทดสอบว่าเนื้อหาที่มีอักขระพิเศษหรือแท็ก HTML ถูก escape ถูกต้อง
+
+### Quality Gates (ก่อน merge เข้า `main`)
+
+1. Lint, format, type check — 0 errors
+2. Unit + integration + E2E ผ่านทั้งหมด, coverage ตาม IX
+3. Performance budgets ตาม XI
+4. Accessibility check (axe) สำหรับงาน UI
+5. Code review ยืนยันตามหลักการ I–XV
+6. Security review สำหรับงานที่แตะ auth, สิทธิ์, หรือข้อมูลที่ผู้ใช้กรอก
+
+### ข้อจำกัดที่ทราบ
+
+- คลิป YouTube เล่นภายในหน้าไม่ได้ แสดงเป็นปุ่มเปิดลิงก์
+- ปุ่ม 👍/👎 ยังไม่บันทึกผล (แผนในอนาคต)
+
+---
+
+## การกำกับดูแล (Governance)
+
+- เอกสารนี้มีลำดับความสำคัญ**สูงกว่า**แนวปฏิบัติอื่นของโปรเจกต์ ถ้าขัดกัน ให้ยึดเอกสารนี้
+- การแก้ไขเอกสารต้องระบุเหตุผล ได้รับความเห็นชอบจากหัวหน้าทีม Call Center และปรับเลขเวอร์ชัน:
+  - **MAJOR** เปลี่ยนหรือยกเลิกหลักการหลัก หรือรูปแบบข้อความแจ้งปัญหา
+  - **MINOR** เพิ่มหลักการ หมวด หรือมาตรฐานใหม่
+  - **PATCH** แก้ถ้อยคำ ตัวเลข หรือรายละเอียดที่ไม่เปลี่ยนความหมาย
+- ทุกการตรวจรับงาน (review) ต้องตรวจว่าเป็นไปตามหลักการ I–XV
+- ทบทวนเอกสารทั้งฉบับอย่างน้อย**ทุก 6 เดือน**
+
+**Version**: 2.0.0 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16

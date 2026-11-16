@@ -1,4 +1,4 @@
-# Research: BGS FAQ Callcenter MVP
+# Research: Self-Service FAQ MVP (revised for constitution v2.0.0)
 
 All Technical Context unknowns are resolved below. Versions checked against the npm
 registry on 2026-11-16.
@@ -29,28 +29,21 @@ registry on 2026-11-16.
 
 ## R3. Search & ranking
 
-- **Decision**: Ranking and highlighting are pure domain functions
-  (`src/domain/search.ts`). Adapters return published FAQs (optionally category-
-  filtered); the domain ranks them. Normalization: NFC, lower-case, collapse
-  whitespace, trim to 200 chars. Matching: substring per search term (works for Thai,
-  which has no word spaces). Score: question match 3, tag match 2, answer match 1 per
-  term; every term must match somewhere (AND); ties → most recent `updatedAt`.
-- **Rationale**: One authoritative ranking rule (VII) whatever the store; 1,000 FAQs ×
-  substring scan is well under 10 ms, inside the 300 ms p95 budget (IV).
-- **Alternatives**: Postgres full-text search (no Thai dictionary; would split ranking
-  logic between SQL and TS); external search service (overkill for 1,000 docs).
+- **Decision**: Pure `searchTopics()` in `src/domain/search.ts`, run in the browser over
+  the visible topic list (≤ 200 topics) so typing never waits on the network. NFC,
+  lower-case, collapse whitespace, cap 200 chars; substring match per term (Thai has no
+  spaces); all terms must match; score title 3 / keywords 2 / solution 1; ties keep
+  curated `order`.
+- **Rationale**: One ranking rule (XIV); instant results (XI); works even if the API is
+  slow.
+- **Alternatives**: Server-side search per keystroke (network latency on 4G).
 
 ## R4. Authentication & sessions
 
-- **Decision**: `AuthProvider` interface. Local provider: passwords hashed with Node
-  `crypto.scrypt` (salted, constant-time compare), session = HS256 JWT signed with
-  `jose` 6.x in an `httpOnly`, `sameSite=lax`, `secure` (prod) cookie, 8-hour expiry.
-  Supabase provider: Supabase Auth with role in `profiles` table.
-  `proxy.ts` does an optimistic redirect for signed-out users; every Server Action and
-  route handler re-checks the session and role through `requireRole()` (FR-019).
-- **Rationale**: No extra auth service needed locally; server-side checks are the
-  real gate, the proxy is only UX.
-- **Alternatives**: NextAuth/Auth.js (heavier, adds config surface for 2 demo users).
+- **Decision**: Viewers never sign in. Admins only: local provider with `crypto.scrypt`
+  hashes and an HS256 `jose` session cookie (httpOnly, sameSite=lax, secure in prod, 8 h).
+  `proxy.ts` redirects signed-out `/admin*` requests; every admin action re-checks via
+  `requireAdmin()`. Production can swap to Supabase Auth behind the same interface.
 
 ## R5. Validation
 
@@ -69,13 +62,10 @@ registry on 2026-11-16.
 - **Alternatives**: Full shadcn CLI install (pulls Radix for every primitive; we only
   need a dialog, which is built on the native `<dialog>` element).
 
-## R7. Internationalisation
+## R7. UI language
 
-- **Decision**: Typed message dictionaries `src/i18n/messages/{th,en}.ts`; locale in a
-  `locale` cookie (default `th`); `getT()` on the server, `useT()` on the client.
-- **Rationale**: Two locales, no routing changes needed; type-checked keys catch
-  missing strings at build time.
-- **Alternatives**: next-intl (fine, but more setup than two flat dictionaries need).
+- **Decision**: Thai only (Principle IV). All strings in `src/i18n/th.ts`, accessed via a
+  typed `t` object — no inline literals (X).
 
 ## R8. Testing
 
@@ -86,8 +76,23 @@ registry on 2026-11-16.
   `@axe-core/playwright`.
 - **Rationale**: Constitution II; fast, deterministic tests.
 
-## R9. Concurrency (FR-014)
+## R9. Concurrency (FR-017)
 
 - **Decision**: Optimistic concurrency — every FAQ has an integer `version`; update
   requires `expectedVersion`; mismatch → `ConflictError`.
 - **Rationale**: Simple, works identically in every adapter.
+
+## R10. Built-in content & no-database fallback
+
+- **Decision**: Built-in topics are a typed module `src/content/base-topics.ts` shipped in
+  the bundle. The store only holds overrides/hidden flags/custom topics. `getPublicTopics()`
+  catches store errors and returns built-in topics with `degraded: true` (FR-019).
+- **Rationale**: Principle VI (originals never deleted, restore always possible) and VII
+  (works without DB) fall out of the design for free.
+
+## R11. Safe content rendering
+
+- **Decision**: Small parser `parseContent()` → AST → React elements. No HTML strings and
+  no `dangerouslySetInnerHTML`; React escapes text. Links rendered only for `https://`,
+  with `rel="noopener noreferrer"` and `target="_blank"`.
+- **Rationale**: Principle V; a markdown library would bring HTML passthrough to disable.
