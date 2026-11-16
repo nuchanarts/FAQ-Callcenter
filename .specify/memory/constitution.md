@@ -1,39 +1,3 @@
-<!--
-SYNC IMPACT REPORT
-==================
-Version change: 1.0.0 → 2.0.0
-Bump rationale: MAJOR — product principles from the Call Center team's constitution
-(c:\Users\MS-10\Desktop\constitution.md) were adopted as Principles I–VII. The
-engineering principles of v1.0.0 were kept and renumbered VIII–XV; v1 Principle III
-(Thai/English i18n) was redefined as Thai-first.
-
-Principles:
-  I.    Self-Service First (new, from Desktop constitution)
-  II.   Evidence-Based Content (new)
-  III.  ข้อมูลครบตั้งแต่ข้อความแรก (new)
-  IV.   ภาษาไทยที่เจ้าหน้าที่หน้างานเข้าใจ (new)
-  V.    ความปลอดภัยและความเป็นส่วนตัว (new)
-  VI.   สิทธิ์การแก้ไขชัดเจน (new)
-  VII.  เรียบง่าย ใช้ได้บนทุกอุปกรณ์ (new)
-  VIII. Code Quality            (was I)
-  IX.   Test-Driven Development (was II)
-  X.    UX Consistency          (was III; i18n → Thai-first centralized strings)
-  XI.   Performance             (was IV)
-  XII.  Commit Discipline       (was V)
-  XIII. Reuse First             (was VI)
-  XIV.  Centralized Business Logic (was VII)
-  XV.   Skill-Assisted Development (was VIII)
-
-Sections added: Mission & metrics, Content Standards, Content Workflow.
-
-Templates requiring updates:
-  ✅ .specify/templates/*.md — generic; gates derived from this file at plan time.
-  ⚠ specs/001-faq-callcenter-mvp/{spec,plan,tasks}.md — MUST be regenerated for v2
-     (previous version assumed login-only call-center agents and TH/EN UI).
-
-Deferred TODOs: none
--->
-
 # Constitution: ศูนย์ช่วยเหลือ ระบบคลาวด์กลาง (Self-Service FAQ App)
 
 > เอกสารหลักการของโปรเจกต์ ใช้เป็นกรอบตัดสินใจสำหรับทุกการพัฒนา การแก้ไขเนื้อหา และการเพิ่มฟีเจอร์
@@ -130,6 +94,9 @@ Deferred TODOs: none
   be split by responsibility. No magic numbers/strings — use named constants.
 - Errors MUST NOT be swallowed; each is handled with a user-meaningful outcome or logged
   with context. Dead and commented-out code MUST be removed.
+- Production configuration MUST fail fast: required settings (data backend, session
+  secret) have no unsafe production defaults, and example/published secrets are rejected
+  at startup.
 
 ### IX. Test-Driven Development (NON-NEGOTIABLE)
 
@@ -140,6 +107,10 @@ Deferred TODOs: none
 - E2E MUST cover the release checklist: ค้นหา, เปิด-ปิดหัวข้อ, สร้างข้อความแจ้งปัญหา,
   แก้ไขในโหมด Admin, แสดงผลบนมือถือ, ใช้งานแบบไม่มีฐานข้อมูล/ไม่ล็อกอิน, และ escape
   อักขระพิเศษ/แท็ก HTML.
+- Every screen MUST be exercised by E2E at 360 px and desktop, with checks for horizontal
+  overflow and WCAG 2.1 AA (axe, no serious/critical violations).
+- Every defect found by code review, analysis, or a guidelines review gets a failing
+  regression test before the fix.
 - Overall coverage MUST stay ≥ 80%; tests MUST be deterministic and fast (unit < 30 s).
 
 ### X. User Experience Consistency
@@ -164,7 +135,8 @@ Deferred TODOs: none
 | First-load JS per route (gzipped) | ≤ 200 KB |
 
 Lists over 50 items MUST paginate or virtualize; no N+1 queries. A regression MUST NOT
-merge without an approved exception.
+merge without an approved exception. Budgets MUST be enforced by automated tests in the
+quality gate (per-route JS size and LCP, search latency) — not by manual inspection.
 
 ### XII. Commit Discipline
 
@@ -173,7 +145,8 @@ merge without an approved exception.
 - Work on feature branches; merge to `main` only after Quality Gates pass.
 - Secrets, `.env*`, and any patient data MUST never be committed.
 - Pre-commit hooks MUST run lint, format, type check, and related tests; `--no-verify`
-  is prohibited.
+  is prohibited. When a hook fails, fix the cause; failing tests for unfinished work are
+  kept out of the commit (e.g. stashed), never committed red.
 
 ### XIII. Reuse First (Shared Components & Functions)
 
@@ -200,6 +173,11 @@ for implementation; `superpowers:systematic-debugging` for failures;
 Playwright for E2E; `superpowers:verification-before-completion` before claiming done;
 `code-review` / `simplify` / `security-review` before merge. Check library APIs against
 current docs, not memory. The constitution wins over any skill guidance.
+
+After implementing a feature, three reviews are mandatory before merge: `/speckit-analyze`
+(spec ↔ plan ↔ tasks ↔ code), `code-review`, and `web-design-guidelines` for UI. Each
+finding is either fixed (with a regression test, per IX) or recorded as a task in
+`tasks.md`; `/speckit-checklist` produces the release-gate checklist for reviewers.
 
 ---
 
@@ -270,10 +248,11 @@ current docs, not memory. The constitution wins over any skill guidance.
 
 1. Lint, format, type check — 0 errors
 2. Unit + integration + E2E ผ่านทั้งหมด, coverage ตาม IX
-3. Performance budgets ตาม XI
-4. Accessibility check (axe) สำหรับงาน UI
+3. Performance budgets ตาม XI (ตรวจด้วย performance E2E อัตโนมัติ)
+4. Accessibility check (axe) และ 360 px สำหรับทุกหน้าจอ
 5. Code review ยืนยันตามหลักการ I–XV
 6. Security review สำหรับงานที่แตะ auth, สิทธิ์, หรือข้อมูลที่ผู้ใช้กรอก
+7. `/speckit-analyze` ไม่มีประเด็น CRITICAL และ checklist ใน `checklists/` ผ่านการตรวจโดย reviewer
 
 ### ข้อจำกัดที่ทราบ
 
@@ -292,4 +271,4 @@ current docs, not memory. The constitution wins over any skill guidance.
 - ทุกการตรวจรับงาน (review) ต้องตรวจว่าเป็นไปตามหลักการ I–XV
 - ทบทวนเอกสารทั้งฉบับอย่างน้อย**ทุก 6 เดือน**
 
-**Version**: 2.0.0 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16
+**Version**: 2.1.0 | **Ratified**: 2026-11-16 | **Last Amended**: 2026-11-16
