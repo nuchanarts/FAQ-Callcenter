@@ -30,6 +30,7 @@ function Chip({
       onClick={onClick}
       className={cn(
         "inline-flex h-10 shrink-0 items-center gap-2 rounded-pill border px-3.5 text-[0.95rem] font-semibold whitespace-nowrap transition-colors",
+        "lg:h-11 lg:w-full lg:rounded-soft lg:text-left",
         pressed
           ? "border-herb bg-herb text-on-herb"
           : "border-line-strong bg-surface text-ink-muted hover:border-herb hover:text-herb",
@@ -39,7 +40,7 @@ function Chip({
       {children}
       <span
         className={cn(
-          "min-w-6 rounded-pill px-1.5 text-center text-[0.85rem] tabular-nums",
+          "ml-auto min-w-6 rounded-pill px-1.5 text-center text-[0.85rem] tabular-nums",
           pressed ? "bg-herb-strong" : "bg-surface-muted",
         )}
       >
@@ -49,13 +50,13 @@ function Chip({
   );
 }
 
-/** The 8 fixed categories as filter chips with live counts (FR-003). Scrolls sideways on phones. */
+/** The 8 fixed categories as filter chips with live counts (FR-003). Scrolls sideways on phones; a vertical menu from 1024 px. */
 export function CategoryTabs({ value, counts, total, onChange }: CategoryTabsProps) {
   return (
     <div
       role="group"
       aria-label={th.categories.label}
-      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-2 [scrollbar-width:thin] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 lg:flex-col lg:gap-1.5 lg:pb-0"
     >
       <Chip pressed={value === null} onClick={() => onChange(null)} count={total}>
         {th.categories.all}

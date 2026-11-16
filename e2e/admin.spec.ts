@@ -69,11 +69,14 @@ test.describe("US3 — admin edits content reversibly", () => {
   test("create a custom topic: https-only links, HTML is escaped, delete needs two confirmations", async ({
     page,
   }) => {
+    // Unique per run so tests sharing one in-memory server never collide.
+    const tag = `e2e${Date.now()}`;
+    const title = `ทดสอบ ${tag} <b>ตัวหนา</b>`;
     await signIn(page, "/admin/topics/new");
-    await page.getByLabel(/^คำถาม \/ อาการ/).fill("ทดสอบ E2E <b>ตัวหนา</b>");
+    await page.getByLabel(/^คำถาม \/ อาการ/).fill(title);
     await page.getByLabel(/^หมวด/).selectOption("finance");
     await page.getByRole("radio", { name: /ต้องแจ้งทีม/ }).check();
-    await page.getByLabel(/^คำค้นเพิ่มเติม/).fill("e2eคำค้น");
+    await page.getByLabel(/^คำค้นเพิ่มเติม/).fill(tag);
     await page.getByLabel(/^วิธีแก้/).fill("1. กด <script>alert(1)</script>\n> ถ้ายังไม่ได้ แจ้งทีม");
     await page.getByRole("button", { name: "เพิ่มลิงก์" }).click();
     await page.getByLabel(/^ชื่อที่แสดง/).fill("คู่มือ");
@@ -88,23 +91,28 @@ test.describe("US3 — admin edits content reversibly", () => {
     let dialogs = 0;
     page.on("dialog", () => dialogs++);
     await page.goto("/");
-    await page.getByRole("searchbox").fill("e2eคำค้น");
-    await page.getByRole("button", { name: /ทดสอบ E2E/ }).click();
-    await expect(page.getByText("ทดสอบ E2E <b>ตัวหนา</b>")).toBeVisible();
-    await expect(page.getByText("กด <script>alert(1)</script>")).toBeVisible();
-    await expect(page.getByRole("link", { name: /คู่มือ/ })).toHaveAttribute(
+    await page.getByRole("searchbox").fill(tag);
+    const topicButton = page.getByRole("button", { name: new RegExp(tag) });
+    await topicButton.click();
+    // Title is shown as literal text (escaped) in the list row.
+    await expect(topicButton).toContainText(title);
+    await expect(
+      page.getByText("กด <script>alert(1)</script>").locator("visible=true"),
+    ).toBeVisible();
+    await expect(page.locator("a:visible", { hasText: "คู่มือ" })).toHaveAttribute(
       "href",
       "https://example.com/manual.pdf",
     );
+    expect(await page.locator("b", { hasText: "ตัวหนา" }).count()).toBe(0);
     expect(dialogs).toBe(0);
 
     await page.goto("/admin");
-    const custom = row(page, "ทดสอบ E2E");
+    const custom = row(page, tag);
     await custom.getByRole("button", { name: /^ลบ/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: "ลบ" }).click();
     await expect(page.getByRole("dialog")).toContainText("ยืนยันอีกครั้ง");
     await page.getByRole("dialog").getByRole("button", { name: "ลบถาวร" }).click();
-    await expect(row(page, "ทดสอบ E2E")).toHaveCount(0);
+    await expect(row(page, tag)).toHaveCount(0);
   });
 
   test("built-in topics have no delete action", async ({ page }) => {

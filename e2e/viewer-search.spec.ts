@@ -14,22 +14,40 @@ test.describe("US1 — viewer searches and solves a problem (no sign-in)", () =>
     expect(box!.y).toBeLessThan(page.viewportSize()!.height);
   });
 
-  test("finds a topic by colloquial keyword and expands its steps", async ({ page }) => {
+  test("finds a topic by colloquial keyword and shows its steps", async ({ page }) => {
+    const wide = page.viewportSize()!.width >= 1280;
     const search = page.getByRole("searchbox");
     await search.fill("ออเทน");
     await expect(page.getByText("พบ 1 หัวข้อ")).toBeVisible();
     const toggle = page.getByRole("button", { name: /ขอ Authen Code ไม่ได้/ });
     await expect(page.getByText("ทำเองได้บางส่วน").first()).toBeVisible();
     await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    if (wide) {
+      // Wide screens: the topic is selected and its answer shows beside the list.
+      await expect(toggle).toHaveAttribute("aria-current", "true");
+      await expect(page.getByRole("region", { name: /ขอ Authen Code ไม่ได้/ })).toBeVisible();
+    } else {
+      await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    }
     await expect(page.getByRole("list").filter({ hasText: "ถอดบัตรออก" })).toBeVisible();
-    await expect(page.locator("aside").filter({ hasText: "ถ้ายังไม่ได้" })).toBeVisible();
+    await expect(page.locator("aside:visible").filter({ hasText: "ถ้ายังไม่ได้" })).toBeVisible();
     await expect(page.getByRole("link", { name: /ยังไม่ได้ — แจ้งทีม/ })).toHaveAttribute(
       "href",
       /\/report\?topic=b-authen-card/,
     );
-    await toggle.click();
-    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    if (!wide) {
+      await toggle.click();
+      await expect(toggle).toHaveAttribute("aria-expanded", "false");
+    }
+  });
+
+  test("wide screens show the first answer without clicking", async ({ page }) => {
+    test.skip(page.viewportSize()!.width < 1280, "side-by-side layout is for ≥ 1280 px");
+    await expect(page.getByRole("button", { name: /เข้าระบบแล้วหน้าจอขาว/ })).toHaveAttribute(
+      "aria-current",
+      "true",
+    );
+    await expect(page.getByRole("region", { name: /เข้าระบบแล้วหน้าจอขาว/ })).toBeVisible();
   });
 
   test("filters by category and shows counts", async ({ page }) => {

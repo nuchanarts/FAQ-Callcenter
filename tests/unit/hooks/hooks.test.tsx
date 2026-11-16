@@ -6,6 +6,7 @@ import { useClipboard } from "@/hooks/use-clipboard";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -66,6 +67,36 @@ describe("useLocalStorage", () => {
       throw new Error("quota");
     });
     expect(() => act(() => result.current.set("x"))).not.toThrow();
+  });
+});
+
+describe("useMediaQuery", () => {
+  it("is false when matchMedia is unavailable (server / old browsers)", () => {
+    const original = window.matchMedia;
+    // @ts-expect-error simulate missing API
+    delete window.matchMedia;
+    const { result } = renderHook(() => useMediaQuery("(min-width: 1280px)"));
+    expect(result.current).toBe(false);
+    window.matchMedia = original;
+  });
+
+  it("follows the media query and its changes", () => {
+    let matches = true;
+    const listeners = new Set<() => void>();
+    window.matchMedia = vi.fn().mockImplementation(() => ({
+      get matches() {
+        return matches;
+      },
+      addEventListener: (_: string, l: () => void) => listeners.add(l),
+      removeEventListener: (_: string, l: () => void) => listeners.delete(l),
+    }));
+    const { result } = renderHook(() => useMediaQuery("(min-width: 1280px)"));
+    expect(result.current).toBe(true);
+    act(() => {
+      matches = false;
+      listeners.forEach((l) => l());
+    });
+    expect(result.current).toBe(false);
   });
 });
 

@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { CategoryIcon as IconName } from "@/domain/categories";
+import { cn } from "@/lib/cn";
 
 const ICONS: Record<IconName, LucideIcon> = {
   "log-in": LogIn,
@@ -24,5 +25,5 @@ const ICONS: Record<IconName, LucideIcon> = {
 
 export function CategoryIcon({ name, className }: { name: IconName; className?: string }) {
   const Icon = ICONS[name];
-  return <Icon aria-hidden className={className ?? "size-4"} />;
+  return <Icon aria-hidden className={cn("shrink-0", className ?? "size-4")} />;
 }

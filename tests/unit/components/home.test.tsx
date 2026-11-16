@@ -142,6 +142,36 @@ describe("HomeScreen", () => {
     );
   });
 
+  describe("wide screens (≥ 1280 px): list + answer side by side", () => {
+    function wide() {
+      window.matchMedia = vi.fn().mockImplementation(() => ({
+        matches: true,
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      }));
+    }
+
+    it("shows the first result's answer immediately", () => {
+      wide();
+      render(<HomeScreen topics={topics} />);
+      const detail = screen.getByRole("region", { name: "ขอ Authen Code ไม่ได้" });
+      expect(within(detail).getByText("ขั้นแรก")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: /ขอ Authen Code ไม่ได้/ })).toHaveAttribute(
+        "aria-current",
+        "true",
+      );
+    });
+
+    it("switches the answer when another topic is chosen and follows the search", async () => {
+      wide();
+      render(<HomeScreen topics={topics} />);
+      await userEvent.click(screen.getByRole("button", { name: /เข้าระบบไม่ได้/ }));
+      expect(screen.getByRole("region", { name: "เข้าระบบไม่ได้" })).toBeInTheDocument();
+      await userEvent.type(screen.getByRole("searchbox"), "สติกเกอร์");
+      expect(await screen.findByRole("region", { name: "พิมพ์สติกเกอร์ยาไม่ออก" })).toBeInTheDocument();
+    });
+  });
+
   it("shows the degraded notice when only built-in content is available", () => {
     render(<HomeScreen topics={topics} degraded />);
     expect(screen.getByRole("status")).toHaveTextContent("กำลังแสดงเนื้อหาพื้นฐาน");
