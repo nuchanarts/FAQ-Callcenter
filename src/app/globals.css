@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   Design tokens (Constitution X): the only place colors, radii,
+   shadows and type are defined. Components use the Tailwind
+   utilities mapped below (bg-paper, text-ink, border-line, …).
+---------------------------------------------------------------- */
+:root {
+  --paper: #f5f8f4;
+  --surface: #ffffff;
+  --surface-muted: #ecf2ed;
+  --ink: #13241c;
+  --ink-muted: #4a5c53;
+  --ink-faint: #6d7d75;
+  --line: #d5e0d8;
+  --line-strong: #b7c7bc;
+
+  --herb: #0e6a4e;
+  --herb-strong: #0a5039;
+  --herb-soft: #ddefe6;
+  --on-herb: #ffffff;
+  --hero: #0e3d2e;
+  --hero-ink: #eaf5ef;
+
+  --level-self: #11704f;
+  --level-self-soft: #dcf1e6;
+  --level-partial: #8a5b00;
+  --level-partial-soft: #fbefd2;
+  --level-team: #2e4c9e;
+  --level-team-soft: #e2e8f8;
+
+  --danger: #b3261e;
+  --danger-soft: #fbe4e2;
+  --focus: #1f7ae0;
+
+  --shadow-raise: 0 1px 2px rgb(19 36 28 / 0.06), 0 8px 24px -12px rgb(19 36 28 / 0.18);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0d1612;
+    --surface: #14201a;
+    --surface-muted: #1a2a22;
+    --ink: #e5efe9;
+    --ink-muted: #a9bbb1;
+    --ink-faint: #8a9c92;
+    --line: #26372e;
+    --line-strong: #36493f;
+    --herb: #4cc79a;
+    --herb-strong: #77d8b3;
+    --herb-soft: #173a2d;
+    --on-herb: #06281c;
+    --hero: #0a2a20;
+    --hero-ink: #e5f4ec;
+    --level-self: #6fd6ac;
+    --level-self-soft: #133528;
+    --level-partial: #f1c15a;
+    --level-partial-soft: #3a2c0d;
+    --level-team: #9db3f2;
+    --level-team-soft: #1c2645;
+    --danger: #ff8a80;
+    --danger-soft: #3d1715;
+    --focus: #7ab7ff;
+    --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.7);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-herb: var(--herb);
+  --color-herb-strong: var(--herb-strong);
+  --color-herb-soft: var(--herb-soft);
+  --color-on-herb: var(--on-herb);
+  --color-hero: var(--hero);
+  --color-hero-ink: var(--hero-ink);
+  --color-level-self: var(--level-self);
+  --color-level-self-soft: var(--level-self-soft);
+  --color-level-partial: var(--level-partial);
+  --color-level-partial-soft: var(--level-partial-soft);
+  --color-level-team: var(--level-team);
+  --color-level-team-soft: var(--level-team-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-focus: var(--focus);
+  --shadow-raise: var(--shadow-raise);
+  --font-sans: var(--font-sarabun), "Sarabun", "Noto Sans Thai", system-ui, sans-serif;
+  --font-display: var(--font-anuphan), var(--font-sarabun), system-ui, sans-serif;
+  --radius-soft: 0.625rem;
+  --radius-pill: 999px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.7;
+    min-height: 100dvh;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    line-height: 1.3;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  ::selection {
+    background: var(--herb-soft);
+  }
+}
+
+/* Perforated edge used by the 3-step "medicine label" strip and the message slip. */
+.perforated {
+  background-image: radial-gradient(circle at 50% 0, var(--paper) 5px, transparent 5.5px);
+  background-size: 18px 10px;
+  background-repeat: repeat-x;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
