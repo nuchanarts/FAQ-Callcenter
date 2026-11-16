@@ -93,5 +93,5 @@ Found by `/speckit-analyze` re-check after T001–T038 (0 critical).
 
 - [X] T039 [P] Shared loading skeleton for data views (FR-022): `src/components/ui/skeleton.tsx`, `src/app/loading.tsx`, `src/app/admin/loading.tsx`; unit test in `tests/unit/components/ui.test.tsx`
 - [X] T040 [P] Verify 360 px for every screen (FR-021): run `e2e/guide.spec.ts` and `e2e/admin.spec.ts` on the mobile-360 project and add a no-horizontal-scroll check for `/guide`, `/login`, `/admin`
-- [ ] T041 [P] Sync docs with code: `contracts/interfaces.md` (delete takes `expectedVersion`; degraded fallback keeps last-known flags; proxy verifies tokens), `research.md` R4, `plan.md` structure (`src/proxy.ts`)
+- [X] T041 [P] Sync docs with code: `contracts/interfaces.md` (delete takes `expectedVersion`; degraded fallback keeps last-known flags; proxy verifies tokens), `research.md` R4, `plan.md` structure (`src/proxy.ts`)
 - [ ] T042 Record polish work done outside tasks: `src/app/error.tsx`, `src/app/not-found.tsx`, `scripts/hash-password.ts`, `src/hooks/use-unsaved-changes.ts`, `e2e/performance.spec.ts`, shareable `?q=&category=`, code-review fixes (commit dba7496)

@@ -3,7 +3,10 @@
 ## 1. HTTP
 
 - `GET /api/topics` (public) → 200 `{ topics: EffectiveTopic[] (visible only), degraded: boolean }`.
-  Store failure → built-in topics with `degraded: true` (never 5xx).
+  Store failure → built-in topics merged with the last successfully read overrides/hidden
+  flags (so admin-hidden topics stay hidden), with `degraded: true` (never 5xx).
+- Home also accepts `/?q=<text>&category=<id>` and keeps both in sync with the URL so a
+  search can be shared as a link.
 - `GET /api/health` → `{ ok: true, backend }`.
 
 Search and filtering run client-side over the visible topic list using the shared
@@ -23,7 +26,7 @@ Codes: `validation`, `unauthorized`, `forbidden`, `not_found`, `conflict`,
 | `createTopicAction` | admin | `{ content }` | EffectiveTopic |
 | `setTopicHiddenAction` | admin | `{ id, hidden, expectedVersion }` | EffectiveTopic |
 | `restoreTopicAction` | admin | `{ id, expectedVersion }` | EffectiveTopic |
-| `deleteTopicAction` | admin | `{ id }` (custom only) | `{ id }` |
+| `deleteTopicAction` | admin | `{ id, expectedVersion }` (custom only; stale version → `conflict`) | `{ id }` |
 
 ## 3. Repository (`src/repositories/types.ts`)
 

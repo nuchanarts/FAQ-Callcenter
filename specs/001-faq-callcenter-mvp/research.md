@@ -42,8 +42,12 @@ registry on 2026-11-16.
 
 - **Decision**: Viewers never sign in. Admins only: local provider with `crypto.scrypt`
   hashes and an HS256 `jose` session cookie (httpOnly, sameSite=lax, secure in prod, 8 h).
-  `proxy.ts` redirects signed-out `/admin*` requests; every admin action re-checks via
-  `requireAdmin()`. Production can swap to Supabase Auth behind the same interface.
+  `src/proxy.ts` verifies the token and redirects missing/expired/forged sessions on
+  `/admin*` to `/login?next=<path>`; every admin page and action re-checks via
+  `requireAdmin()`, which also looks the account up in the admin store on every request
+  (removed admins lose access immediately; role comes from the store, not the token).
+  Admin credentials live in `admin_users` (scrypt) for every backend, so sessions behave
+  identically in development, tests and production.
 
 ## R5. Validation
 

@@ -83,7 +83,7 @@ src/
 ├── components/features/{home,topic,report,admin,layout,guide}/
 ├── hooks/                            # use-debounce, use-clipboard, use-local-storage, use-hotkey
 └── lib/                              # config, cn, action-result
-proxy.ts
+src/proxy.ts
 supabase/migrations/0001_init.sql
 tests/unit, tests/integration
 e2e/
