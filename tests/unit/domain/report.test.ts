@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatReportDraft,
   formatReportMessage,
   parseReport,
   prefillDetails,
@@ -79,6 +80,17 @@ describe("formatReportMessage", () => {
     );
     expect(msg).toContain("อีเมล : a@b.co");
     expect(msg).toContain("เลข AnyDesk : 123456789");
+  });
+});
+
+describe("formatReportDraft (live preview while typing)", () => {
+  it("uses the standard labels and shows a placeholder for empty fields", () => {
+    const draft = formatReportDraft({ ...valid, fullName: "  ", email: "" });
+    const lines = draft.split("\n");
+    expect(lines[0]).toBe("ชื่อ - สกุล ผู้แจ้ง: …");
+    expect(lines[1]).toBe("ตำแหน่งงาน : นักวิชาการสาธารณสุข");
+    expect(lines[5]).toBe("อีเมล : …");
+    expect(lines[7]).toMatch(/^รายละเอียดปัญหา : \[หัวข้อ\]/);
   });
 });
 

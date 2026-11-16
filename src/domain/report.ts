@@ -106,19 +106,35 @@ export function validateReport(input: ReportInput): Partial<Record<ReportField, 
   return Object.fromEntries(Object.entries(errors).map(([k, msgs]) => [k, msgs[0]]));
 }
 
+/** Field order of the standard message (Constitution III). */
+const MESSAGE_ORDER: ReportField[] = [
+  "fullName",
+  "position",
+  "unitCode",
+  "unitName",
+  "phone",
+  "email",
+  "anydesk",
+  "details",
+];
+
+function buildMessage(values: Record<ReportField, string>, empty: string): string {
+  return MESSAGE_ORDER.map((field) => {
+    const value = values[field].trim();
+    return `${REPORT_LABELS[field]} ${value === "" ? empty : value}`;
+  }).join("\n");
+}
+
+/** The final, validated message to send to the Call Center team. */
 export function formatReportMessage(r: Report): string {
-  const line = (field: ReportField, value: string) =>
-    `${REPORT_LABELS[field]} ${value.trim() === "" ? EMPTY : value}`;
-  return [
-    line("fullName", r.fullName),
-    line("position", r.position),
-    line("unitCode", r.unitCode),
-    line("unitName", r.unitName),
-    line("phone", r.phone),
-    line("email", r.email),
-    line("anydesk", r.anydesk),
-    line("details", r.details),
-  ].join("\n");
+  return buildMessage(r, EMPTY);
+}
+
+const DRAFT_PLACEHOLDER = "…";
+
+/** Live preview while typing (not validated): empty fields show "…" so gaps are obvious. */
+export function formatReportDraft(input: ReportInput): string {
+  return buildMessage(input, DRAFT_PLACEHOLDER);
 }
 
 /** "ยังไม่ได้" → details start with the topic so the team knows what was already tried. */

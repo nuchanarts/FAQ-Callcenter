@@ -20,7 +20,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12">
+      <main id="main" className="page-width py-10 sm:py-12">
         <header className="mb-8 max-w-2xl">
           <h1 className="text-3xl font-bold sm:text-4xl">{th.report.title}</h1>
           <p className="mt-2 text-ink-muted">{th.report.subtitle}</p>

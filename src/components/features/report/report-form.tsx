@@ -8,6 +8,7 @@ import { Input, Textarea } from "@/components/ui/input";
 import { MessagePreview } from "@/components/features/report/message-preview";
 import {
   EMPTY_REPORT,
+  formatReportDraft,
   formatReportMessage,
   parseReport,
   prefillDetails,
@@ -113,7 +114,7 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
   );
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] 2xl:grid-cols-[minmax(0,1fr)_minmax(0,36rem)]">
       <form ref={formRef} noValidate onSubmit={onSubmit} className="flex flex-col gap-6">
         <p className="flex gap-2 rounded-soft bg-herb-soft px-4 py-3 text-ink">
           <ShieldCheck aria-hidden className="mt-1 size-5 shrink-0 text-herb" />
@@ -133,8 +134,10 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           <legend className="mb-3 font-display text-xl font-semibold">
             {th.report.reporterSection}
           </legend>
-          {text("fullName", { autoComplete: "name" })}
-          {text("position", { autoComplete: "organization-title" })}
+          <div className="grid gap-4 xl:grid-cols-2">
+            {text("fullName", { autoComplete: "name" })}
+            {text("position", { autoComplete: "organization-title" })}
+          </div>
           <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
             {text("unitCode", { hint: th.report.hints.unitCode, inputMode: "numeric" })}
             {text("unitName", { autoComplete: "organization" })}
@@ -191,7 +194,13 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
         </Button>
       </form>
 
-      <div className="lg:sticky lg:top-24">{message && <MessagePreview message={message} />}</div>
+      <div className="lg:sticky lg:top-24">
+        {message ? (
+          <MessagePreview message={message} />
+        ) : (
+          <MessagePreview message={formatReportDraft(values)} draft />
+        )}
+      </div>
     </div>
   );
 }

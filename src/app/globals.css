@@ -128,6 +128,20 @@
   }
 }
 
+/* Shared page width: near full-width on large monitors (รพ.สต. PCs), comfortable gutters. */
+@utility page-width {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 110rem;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+  @media (width >= 80rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
 /* Perforated edge used by the 3-step "medicine label" strip and the message slip. */
 .perforated {
   background-image: radial-gradient(circle at 50% 0, var(--paper) 5px, transparent 5.5px);

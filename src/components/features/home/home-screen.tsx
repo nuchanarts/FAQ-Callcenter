@@ -91,7 +91,7 @@ export function HomeScreen({
   return (
     <>
       <section className="bg-hero text-hero-ink">
-        <div className="mx-auto max-w-7xl px-4 pt-8 pb-20 sm:px-6 lg:pt-7 lg:pb-16">
+        <div className="page-width pt-8 pb-20 lg:pt-7 lg:pb-16">
           <h1 className="text-[1.85rem] leading-tight font-bold sm:text-[2.35rem]">
             {th.app.tagline}
           </h1>
@@ -102,11 +102,11 @@ export function HomeScreen({
         </div>
       </section>
 
-      <div className="mx-auto -mt-12 flex max-w-7xl flex-col gap-6 px-4 pb-16 sm:px-6 lg:-mt-10">
+      <div className="page-width -mt-12 flex flex-col gap-6 pb-16 lg:-mt-10">
         {steps}
         {degraded && <DegradedNotice />}
 
-        <div className="grid gap-6 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-[17.5rem_minmax(0,1fr)] 2xl:grid-cols-[19rem_minmax(0,1fr)] lg:items-start">
           <aside className="flex min-w-0 flex-col gap-3 lg:sticky lg:top-20">
             <h2 className="hidden text-lg font-semibold lg:block">{th.categories.label}</h2>
             <CategoryTabs value={category} counts={counts} total={total} onChange={setCategory} />
@@ -125,7 +125,7 @@ export function HomeScreen({
             {selected ? (
               // CSS decides the layout (no shift after hydration): accordion list below
               // 1280 px, list + answer pane side by side from 1280 px.
-              <div className="xl:grid xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] xl:items-start xl:gap-6">
+              <div className="xl:grid xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] xl:items-start xl:gap-6">
                 <div className="overflow-hidden rounded-soft border border-line bg-paper sm:overflow-visible sm:border-0 xl:overflow-hidden xl:border xl:bg-surface">
                   {results.map((t) => (
                     <TopicCard

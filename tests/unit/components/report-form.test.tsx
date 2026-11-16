@@ -37,6 +37,15 @@ describe("ReportForm", () => {
     expect(screen.getByLabelText(/^รายละเอียดปัญหา/)).toHaveValue("[หัวข้อ] ขอ Authen Code ไม่ได้\n");
   });
 
+  it("shows a live draft of the message while typing, without a copy button", async () => {
+    setup({ topicTitle: "พิมพ์สติกเกอร์ยาไม่ออก" });
+    const draft = screen.getByTestId("report-draft");
+    expect(draft).toHaveTextContent("ชื่อ - สกุล ผู้แจ้ง: …");
+    await userEvent.type(screen.getByLabelText(/ชื่อ - สกุล ผู้แจ้ง/), "สมใจ");
+    expect(screen.getByTestId("report-draft")).toHaveTextContent("ชื่อ - สกุล ผู้แจ้ง: สมใจ");
+    expect(screen.queryByRole("button", { name: "คัดลอกข้อความ" })).toBeNull();
+  });
+
   it("shows field errors without losing typed input", async () => {
     setup();
     await userEvent.type(screen.getByLabelText(/รหัสหน่วยงาน 5 หลัก/), "123");

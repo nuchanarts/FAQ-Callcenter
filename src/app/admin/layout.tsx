@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-7xl px-4 py-10 sm:px-6">
+      <main id="main" className="page-width py-10">
         {children}
       </main>
     </>

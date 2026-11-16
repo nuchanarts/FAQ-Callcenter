@@ -8,7 +8,7 @@ interface Step {
 /** Numbered how-to steps (a real sequence, so numbers carry meaning). */
 export function GuideSteps({ steps, icons }: { steps: readonly Step[]; icons: LucideIcon[] }) {
   return (
-    <ol className="flex flex-col gap-3">
+    <ol className="grid gap-3 2xl:grid-cols-2">
       {steps.map((step, i) => {
         const Icon = icons[i];
         return (

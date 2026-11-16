@@ -11,7 +11,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-line bg-paper/90 backdrop-blur supports-[backdrop-filter]:bg-paper/75">
       <nav
         aria-label={th.nav.menu}
-        className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6"
+        className="page-width flex h-16 items-center justify-between gap-2"
       >
         <Link
           href="/"
