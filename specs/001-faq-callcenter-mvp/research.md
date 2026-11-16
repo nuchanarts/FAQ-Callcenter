@@ -96,3 +96,19 @@ registry on 2026-11-16.
   no `dangerouslySetInnerHTML`; React escapes text. Links rendered only for `https://`,
   with `rel="noopener noreferrer"` and `target="_blank"`.
 - **Rationale**: Principle V; a markdown library would bring HTML passthrough to disable.
+
+## R12. Attachments (clarified 2026-11-16)
+
+- **Decision**: MVP stores attachments as https links only (YouTube Unlisted, Google
+  Drive, PDF URLs), validated by `isHttpsUrl()`. No file storage.
+- **Rationale**: Constitution VII already routes long clips to YouTube/Drive; avoids
+  storage, size checks and file-delete flows in v1.
+- **Alternatives**: Direct upload ≤ 20 MB to Supabase Storage (deferred to v2).
+
+## R13. Admin accounts per environment
+
+- **Decision**: Demo admins (`admin@bgs.local`, `editor@bgs.local`) are seeded only when
+  `NODE_ENV !== "production"` or `ALLOW_DEMO_ADMINS=true` (used by E2E). Production
+  admins come from Supabase Auth + `admin_profiles`. `SESSION_SECRET` ≥ 32 chars is
+  mandatory in production.
+- **Rationale**: Constitution V/VI — no default credentials in production.

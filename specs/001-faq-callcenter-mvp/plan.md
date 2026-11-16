@@ -14,7 +14,7 @@ ships in code, so the app works even when the store is down. See [research.md](.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.x (`strict`), Node.js 22+
+**Language/Version**: TypeScript 6.0 (`strict`, `noUncheckedIndexedAccess`), Node.js 22+
 
 **Primary Dependencies**: Next.js 16.4 (App Router), React 19, Tailwind CSS 4, zod 4,
 jose 6, lucide-react; @supabase/supabase-js 2 (production adapter)

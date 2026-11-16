@@ -11,6 +11,12 @@ built-in 'How to use' guide … unit, integration, and E2E tests. Tech direction
 Supabase." — refined by the Call Center team's constitution (self-service FAQ for
 รพ.สต. staff, standard problem-report message, 8 categories, admin overrides).
 
+## Clarifications
+
+### Session 2026-11-16
+
+- Q: Should admins upload clip/manual files (≤ 20 MB) in the MVP, or only paste links? → A: Links only (https://) in the MVP; direct upload deferred (user moved to planning; recommended default kept).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - เจ้าหน้าที่ รพ.สต. ค้นหาและแก้ปัญหาเอง (Priority: P1)
