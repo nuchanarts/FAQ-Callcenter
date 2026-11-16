@@ -73,12 +73,12 @@ src/i18n/th.ts    every user-facing string
 
 See [`.env.example`](.env.example).
 
-| Variable                                                | Default           | Notes                                              |
-| ------------------------------------------------------- | ----------------- | -------------------------------------------------- |
-| `DATA_BACKEND`                                          | `file`            | `file` · `memory` · `failing` · `supabase`         |
-| `SESSION_SECRET`                                        | dev value         | **Required in production**, ≥ 32 random characters |
-| `ALLOW_DEMO_ADMINS`                                     | off in production | Seeds the demo admins (E2E only)                   |
-| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | —                 | Required for `supabase`                            |
+| Variable                                                | Default           | Notes                                                                           |
+| ------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------- |
+| `DATA_BACKEND`                                          | `file` (dev only) | **Required in production**: `file` · `memory` · `failing` · `supabase`          |
+| `SESSION_SECRET`                                        | dev value         | **Required in production**, ≥ 32 random characters; example values are rejected |
+| `ALLOW_DEMO_ADMINS`                                     | off in production | Seeds the demo admins (E2E only)                                                |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | —                 | Required for `supabase`                                                         |
 
 ## Production (Supabase)
 
