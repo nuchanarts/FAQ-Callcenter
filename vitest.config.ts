@@ -4,10 +4,15 @@ import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   plugins: [react()],
-  resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  resolve: {
+    alias: {
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "server-only": fileURLToPath(new URL("./tests/server-only-stub.ts", import.meta.url)),
+    },
+  },
   test: {
     globals: true,
-    environment: "jsdom",
+    environment: "node",
     setupFiles: ["./tests/setup.ts"],
     include: ["tests/**/*.test.{ts,tsx}"],
     env: { DATA_BACKEND: "memory", SESSION_SECRET: "test-secret-test-secret-test-secret-1234" },
