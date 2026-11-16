@@ -17,6 +17,7 @@ import type { ActionError } from "@/domain/errors";
 import { LEVELS, type Level } from "@/domain/levels";
 import { parseKeywords, TOPIC_LIMITS, type Attachment } from "@/domain/topic";
 import type { EffectiveTopic } from "@/domain/topics";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { th } from "@/i18n/th";
 import { cn } from "@/lib/cn";
 
@@ -34,8 +35,17 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
   const [attachments, setAttachments] = useState<Attachment[]>(topic?.attachments ?? []);
   const [error, setError] = useState<ActionError | null>(null);
   const [pending, setPending] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  useUnsavedChanges(dirty && !pending);
 
   const fieldError = (key: string) => error?.fieldErrors?.[key]?.[0];
+  /** Wrap a setter so any edit marks the form dirty (unsaved-changes warning). */
+  const edit =
+    <T,>(set: (v: T) => void) =>
+    (v: T) => {
+      setDirty(true);
+      set(v);
+    };
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -48,14 +58,22 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
       solution,
       attachments,
     };
-    const result = topic
-      ? await saveTopicAction({ id: topic.id, expectedVersion: topic.version, content })
-      : await createTopicAction(content);
-    setPending(false);
-    if (!result.ok) {
-      setError(result.error);
+    try {
+      const result = topic
+        ? await saveTopicAction({ id: topic.id, expectedVersion: topic.version, content })
+        : await createTopicAction(content);
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+    } catch {
+      // Network failure or a stale deployment: keep the form and the admin's input.
+      setError({ code: "unexpected", message: th.errors.unexpected });
       return;
+    } finally {
+      setPending(false);
     }
+    setDirty(false);
     toast.show(th.admin.saved);
     router.push("/admin");
     router.refresh();
@@ -97,7 +115,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
               {...p}
               maxLength={TOPIC_LIMITS.title}
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => edit(setTitle)(e.target.value)}
             />
           )}
         </Field>
@@ -108,7 +126,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
               <Select
                 {...p}
                 value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value as CategoryId)}
+                onChange={(e) => edit(setCategoryId)(e.target.value as CategoryId)}
               >
                 <option value="" disabled>
                   {f.chooseCategory}
@@ -142,7 +160,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
                     name="level"
                     value={l}
                     checked={level === l}
-                    onChange={() => setLevel(l)}
+                    onChange={() => edit(setLevel)(l)}
                     className="accent-herb"
                   />
                   <LevelBadge level={l} />
@@ -153,7 +171,9 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
         </div>
 
         <Field label={f.keywords} hint={f.keywordsHint} error={fieldError("keywords")} optional>
-          {(p) => <Input {...p} value={keywords} onChange={(e) => setKeywords(e.target.value)} />}
+          {(p) => (
+            <Input {...p} value={keywords} onChange={(e) => edit(setKeywords)(e.target.value)} />
+          )}
         </Field>
 
         <Field label={f.solution} hint={f.solutionHint} error={fieldError("solution")} required>
@@ -163,7 +183,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
               rows={12}
               maxLength={TOPIC_LIMITS.solution}
               value={solution}
-              onChange={(e) => setSolution(e.target.value)}
+              onChange={(e) => edit(setSolution)(e.target.value)}
             />
           )}
         </Field>
@@ -171,7 +191,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
         <AttachmentsEditor
           value={attachments}
           errors={error?.fieldErrors ?? {}}
-          onChange={setAttachments}
+          onChange={edit(setAttachments)}
         />
 
         <div className="flex flex-wrap gap-3">

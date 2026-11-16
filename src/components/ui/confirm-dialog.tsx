@@ -47,7 +47,7 @@ export function ConfirmDialog({
   if (!open) return null;
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 p-4 sm:items-center"
+      className="fixed inset-0 z-50 flex items-end justify-center overscroll-contain bg-ink/40 p-4 sm:items-center"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) onCancel();
       }}

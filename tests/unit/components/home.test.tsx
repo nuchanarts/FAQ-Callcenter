@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HomeScreen } from "@/components/features/home/home-screen";
@@ -117,6 +117,29 @@ describe("HomeScreen", () => {
     await userEvent.type(box, "abc");
     await userEvent.keyboard("{Escape}");
     expect(box).toHaveValue("");
+  });
+
+  it("starts from the query and category in the URL", () => {
+    render(<HomeScreen topics={topics} initialQuery="ออเทน" initialCategory="authen" />);
+    expect(screen.getByRole("searchbox")).toHaveValue("ออเทน");
+    expect(screen.getAllByRole("article")).toHaveLength(1);
+  });
+
+  it("keeps the URL in sync so searches can be shared", async () => {
+    window.history.replaceState(null, "", "/");
+    render(<HomeScreen topics={topics} />);
+    await userEvent.type(screen.getByRole("searchbox"), "ออเทน");
+    const chips = screen.getByRole("group", { name: "หมวดปัญหา" });
+    await userEvent.click(within(chips).getByRole("button", { name: /ตรวจสอบสิทธิ/ }));
+    await vi.waitFor(() => {
+      const params = new URLSearchParams(window.location.search);
+      expect(params.get("q")).toBe("ออเทน");
+      expect(params.get("category")).toBe("authen");
+    });
+    await userEvent.clear(screen.getByRole("searchbox"));
+    await vi.waitFor(() =>
+      expect(new URLSearchParams(window.location.search).has("q")).toBe(false),
+    );
   });
 
   it("shows the degraded notice when only built-in content is available", () => {

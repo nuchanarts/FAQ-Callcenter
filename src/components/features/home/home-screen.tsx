@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useMemo, useRef, useState, type ReactNode } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClass } from "@/components/ui/button";
 import { CategoryTabs } from "@/components/features/home/category-tabs";
@@ -11,22 +11,53 @@ import { TopicCard } from "@/components/features/topic/topic-card";
 import type { CategoryId } from "@/domain/categories";
 import { countByCategory, normalizeQuery, searchTopics } from "@/domain/search";
 import type { EffectiveTopic } from "@/domain/topics";
+import { useDebounce } from "@/hooks/use-debounce";
 import { useHotkey } from "@/hooks/use-hotkey";
 import { th } from "@/i18n/th";
+
+const URL_SYNC_MS = 300;
 
 interface HomeScreenProps {
   topics: EffectiveTopic[];
   degraded?: boolean;
   /** Rendered between the hero search and the topic list (the 3 basic steps). */
   steps?: ReactNode;
+  /** From ?q= and ?category= so searches can be shared as links. */
+  initialQuery?: string;
+  initialCategory?: CategoryId | null;
+}
+
+/** Mirror search state into the URL without navigating (shareable, survives Back). */
+function useUrlSync(query: string, category: CategoryId | null) {
+  const debouncedQuery = useDebounce(query, URL_SYNC_MS);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const q = debouncedQuery.trim();
+    if (q) params.set("q", q);
+    else params.delete("q");
+    if (category) params.set("category", category);
+    else params.delete("category");
+    const search = params.toString();
+    const next = `${window.location.pathname}${search ? `?${search}` : ""}`;
+    if (next !== `${window.location.pathname}${window.location.search}`) {
+      window.history.replaceState(window.history.state, "", next);
+    }
+  }, [debouncedQuery, category]);
 }
 
 /** Viewer home: hero search → 3 basic steps → category chips → topics (US1). */
-export function HomeScreen({ topics, degraded = false, steps }: HomeScreenProps) {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<CategoryId | null>(null);
+export function HomeScreen({
+  topics,
+  degraded = false,
+  steps,
+  initialQuery = "",
+  initialCategory = null,
+}: HomeScreenProps) {
+  const [query, setQuery] = useState(initialQuery);
+  const [category, setCategory] = useState<CategoryId | null>(initialCategory);
   const searchRef = useRef<HTMLInputElement>(null);
   const deferredQuery = useDeferredValue(query);
+  useUrlSync(query, category);
 
   useHotkey("/", (e) => {
     e.preventDefault();

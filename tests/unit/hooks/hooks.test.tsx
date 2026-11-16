@@ -5,6 +5,7 @@ import { useDebounce } from "@/hooks/use-debounce";
 import { useClipboard } from "@/hooks/use-clipboard";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { useHotkey } from "@/hooks/use-hotkey";
+import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 
 afterEach(() => {
   vi.useRealTimers();
@@ -65,6 +66,24 @@ describe("useLocalStorage", () => {
       throw new Error("quota");
     });
     expect(() => act(() => result.current.set("x"))).not.toThrow();
+  });
+});
+
+describe("useUnsavedChanges", () => {
+  it("blocks unload only while dirty", () => {
+    const { rerender, unmount } = renderHook(({ dirty }) => useUnsavedChanges(dirty), {
+      initialProps: { dirty: false },
+    });
+    const fire = () => {
+      const e = new Event("beforeunload", { cancelable: true });
+      window.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    expect(fire()).toBe(false);
+    rerender({ dirty: true });
+    expect(fire()).toBe(true);
+    unmount();
+    expect(fire()).toBe(false);
   });
 });
 

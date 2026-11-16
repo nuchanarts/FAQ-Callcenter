@@ -92,6 +92,17 @@ describe("TopicForm", () => {
     expect(screen.getByLabelText(/^ลิงก์/)).toHaveValue("http://x");
   });
 
+  it("recovers when the action call itself fails (offline / stale deployment)", async () => {
+    actions.createTopicAction.mockRejectedValue(new Error("Failed to fetch"));
+    wrap(<TopicForm />);
+    await userEvent.type(screen.getByLabelText(/^คำถาม \/ อาการ/), "ยังอยู่");
+    const save = screen.getByRole("button", { name: "บันทึกและเผยแพร่" });
+    await userEvent.click(save);
+    expect(await screen.findByRole("alert")).toHaveTextContent("เกิดข้อผิดพลาด");
+    expect(save).toBeEnabled();
+    expect(screen.getByLabelText(/^คำถาม \/ อาการ/)).toHaveValue("ยังอยู่");
+  });
+
   it("explains edit conflicts", async () => {
     actions.saveTopicAction.mockResolvedValue({
       ok: false,
