@@ -40,7 +40,7 @@ function Chip({
       <span
         className={cn(
           "min-w-6 rounded-pill px-1.5 text-center text-[0.85rem] tabular-nums",
-          pressed ? "bg-on-herb/20" : "bg-surface-muted",
+          pressed ? "bg-herb-strong" : "bg-surface-muted",
         )}
       >
         {count}
