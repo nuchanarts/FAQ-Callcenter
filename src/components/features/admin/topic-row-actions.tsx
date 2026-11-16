@@ -49,7 +49,10 @@ export function TopicRowActions({ topic }: { topic: EffectiveTopic }) {
   };
 
   const remove = async () => {
-    await run(() => deleteTopicAction({ id: topic.id }), th.admin.deleted);
+    await run(
+      () => deleteTopicAction({ id: topic.id, expectedVersion: topic.version }),
+      th.admin.deleted,
+    );
     close();
   };
 

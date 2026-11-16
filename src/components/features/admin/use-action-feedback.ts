@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { useToast } from "@/components/ui/toast";
+import type { ErrorCode } from "@/domain/errors";
 import type { ActionResult } from "@/lib/action-result";
+
+const STALE_CODES = new Set<ErrorCode>(["conflict", "not_found"]);
 
 /**
  * Shared "run a server action → toast → refresh" flow for admin screens (Constitution XIII).
@@ -24,6 +27,8 @@ export function useActionFeedback() {
           router.refresh();
         } else {
           toast.show(result.error.message, "error");
+          // Data changed under us: reload so the next attempt uses current versions.
+          if (STALE_CODES.has(result.error.code)) router.refresh();
         }
         return result;
       } finally {

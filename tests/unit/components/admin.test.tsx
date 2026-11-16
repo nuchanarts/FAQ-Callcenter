@@ -168,7 +168,18 @@ describe("TopicTable", () => {
     await userEvent.click(
       within(screen.getByRole("dialog")).getByRole("button", { name: "ลบถาวร" }),
     );
-    expect(actions.deleteTopicAction).toHaveBeenCalledWith({ id: "c-1" });
+    expect(actions.deleteTopicAction).toHaveBeenCalledWith({ id: "c-1", expectedVersion: 1 });
+    expect(refresh).toHaveBeenCalled();
+  });
+
+  it("reloads fresh data after a conflict so the next attempt uses the new version", async () => {
+    actions.setTopicHiddenAction.mockResolvedValue({
+      ok: false,
+      error: { code: "conflict", message: "มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่" },
+    });
+    wrap(<TopicTable topics={topics} />);
+    await userEvent.click(screen.getByRole("button", { name: /ซ่อน แก้แล้ว/ }));
+    expect(await screen.findByText("มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
   });
 

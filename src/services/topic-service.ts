@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { SessionUser } from "@/auth/session";
-import { NotDeletableError, NotFoundError, ValidationError } from "@/domain/errors";
+import { ConflictError, NotDeletableError, NotFoundError, ValidationError } from "@/domain/errors";
 import { assertAdmin } from "@/domain/permissions";
 import { parseTopicContent, type TopicContent } from "@/domain/topic";
 import {
@@ -21,7 +21,7 @@ export interface TopicServiceDeps {
 
 export interface PublicTopics {
   topics: EffectiveTopic[];
-  /** true when the store failed and only built-in content is shown (FR-019). */
+  /** true when the store failed and only built-in/last-known content is shown (FR-019). */
   degraded: boolean;
 }
 
@@ -30,52 +30,67 @@ type Actor = SessionUser | null;
 /** Version 0 means "never stored": the repository must insert instead of update. */
 const repoExpected = (version: number): number | null => (version === 0 ? null : version);
 
+/**
+ * Last successful read per repository. Services are created per request, repositories are
+ * process-wide, so this survives across requests and lets an outage keep hidden topics hidden.
+ */
+const lastKnown = new WeakMap<TopicRepository, StoredTopic[]>();
+
 /** Topic use cases. All business rules live here or in src/domain (Constitution XIV). */
 export function createTopicService(deps: TopicServiceDeps) {
   const newId = deps.newId ?? (() => `c-${randomUUID()}`);
-  const baseById = new Map(deps.base.map((b) => [b.id, b]));
+  const baseIds = new Set(deps.base.map((b) => b.id));
 
-  async function allTopics(): Promise<EffectiveTopic[]> {
-    return mergeTopics(deps.base, await deps.topics.list());
+  async function readStored(): Promise<StoredTopic[]> {
+    const stored = await deps.topics.list();
+    lastKnown.set(deps.topics, stored);
+    return stored;
   }
 
-  async function findOrThrow(id: string): Promise<EffectiveTopic> {
-    const found = (await allTopics()).find((t) => t.id === id);
+  function find(stored: StoredTopic[], id: string): EffectiveTopic {
+    const found = mergeTopics(deps.base, stored).find((t) => t.id === id);
     if (!found) throw new NotFoundError("topic");
     return found;
   }
 
-  /** Write a new version of a topic record and return the merged result. */
+  /** One read + one write: apply a patch to a topic record and return the merged result. */
   async function write(
     actor: SessionUser,
-    current: EffectiveTopic,
+    id: string,
     expectedVersion: number,
     patch: { content?: TopicContent | null; hidden?: boolean },
   ): Promise<EffectiveTopic> {
-    const existing = await deps.topics.get(current.id);
+    const stored = await readStored();
+    const current = find(stored, id);
+    const existing = stored.find((s) => s.id === id);
     const stamp = deps.now().toISOString();
-    const next: StoredTopic = {
-      id: current.id,
-      origin: current.origin,
-      content: patch.content !== undefined ? patch.content : (existing?.content ?? null),
-      hidden: patch.hidden ?? existing?.hidden ?? false,
-      version: expectedVersion + 1,
-      createdAt: existing?.createdAt ?? stamp,
-      updatedAt: stamp,
-      updatedBy: actor.displayName,
-    };
-    await deps.topics.upsert(next, repoExpected(expectedVersion));
-    return findOrThrow(current.id);
+    const saved = await deps.topics.upsert(
+      {
+        id,
+        origin: current.origin,
+        content: patch.content !== undefined ? patch.content : (existing?.content ?? null),
+        hidden: patch.hidden ?? existing?.hidden ?? false,
+        version: expectedVersion + 1,
+        createdAt: existing?.createdAt ?? stamp,
+        updatedAt: stamp,
+        updatedBy: actor.displayName,
+      },
+      repoExpected(expectedVersion),
+    );
+    const next = [...stored.filter((s) => s.id !== id), saved];
+    lastKnown.set(deps.topics, next);
+    return find(next, id);
   }
 
   // ── Viewer ──────────────────────────────────────────────────────────
 
   async function getPublicTopics(): Promise<PublicTopics> {
     try {
-      return { topics: visibleTopics(await allTopics()), degraded: false };
+      return { topics: visibleTopics(mergeTopics(deps.base, await readStored())), degraded: false };
     } catch (err) {
-      console.error("[topics] store unavailable, serving built-in content", err);
-      return { topics: mergeTopics(deps.base, []), degraded: true };
+      console.error("[topics] store unavailable, serving built-in/last-known content", err);
+      const fallback = lastKnown.get(deps.topics) ?? [];
+      return { topics: visibleTopics(mergeTopics(deps.base, fallback)), degraded: true };
     }
   }
 
@@ -88,22 +103,22 @@ export function createTopicService(deps: TopicServiceDeps) {
 
   async function listForAdmin(actor: Actor): Promise<EffectiveTopic[]> {
     assertAdmin(actor);
-    return allTopics();
+    return mergeTopics(deps.base, await readStored());
   }
 
   async function getForAdmin(actor: Actor, id: string): Promise<EffectiveTopic> {
     assertAdmin(actor);
-    return findOrThrow(id);
+    return find(await readStored(), id);
   }
 
   async function createTopic(actor: Actor, input: unknown): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
     const content = parseTopicContent(input);
     const stamp = deps.now().toISOString();
-    const id = newId();
-    await deps.topics.upsert(
+    const stored = await readStored();
+    const saved = await deps.topics.upsert(
       {
-        id,
+        id: newId(),
         origin: "custom",
         content,
         hidden: false,
@@ -114,7 +129,9 @@ export function createTopicService(deps: TopicServiceDeps) {
       },
       null,
     );
-    return findOrThrow(id);
+    const next = [...stored, saved];
+    lastKnown.set(deps.topics, next);
+    return find(next, saved.id);
   }
 
   async function saveTopic(
@@ -123,8 +140,7 @@ export function createTopicService(deps: TopicServiceDeps) {
   ): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
     const content = parseTopicContent(input.content);
-    const current = await findOrThrow(input.id);
-    return write(user, current, input.expectedVersion, { content });
+    return write(user, input.id, input.expectedVersion, { content });
   }
 
   async function setHidden(
@@ -132,8 +148,7 @@ export function createTopicService(deps: TopicServiceDeps) {
     input: { id: string; hidden: boolean; expectedVersion: number },
   ): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
-    const current = await findOrThrow(input.id);
-    return write(user, current, input.expectedVersion, { hidden: input.hidden });
+    return write(user, input.id, input.expectedVersion, { hidden: input.hidden });
   }
 
   async function restoreTopic(
@@ -141,19 +156,27 @@ export function createTopicService(deps: TopicServiceDeps) {
     input: { id: string; expectedVersion: number },
   ): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
-    const current = await findOrThrow(input.id);
-    if (!baseById.has(current.id)) throw new ValidationError();
-    if (current.version === 0) return current;
-    return write(user, current, input.expectedVersion, { content: null });
+    if (!baseIds.has(input.id)) {
+      // Only built-in topics have an original to restore.
+      find(await readStored(), input.id);
+      throw new ValidationError();
+    }
+    if (input.expectedVersion === 0) return find(await readStored(), input.id);
+    return write(user, input.id, input.expectedVersion, { content: null });
   }
 
-  async function deleteTopic(actor: Actor, id: string): Promise<{ id: string }> {
+  async function deleteTopic(
+    actor: Actor,
+    input: { id: string; expectedVersion: number },
+  ): Promise<{ id: string }> {
     assertAdmin(actor);
-    if (baseById.has(id)) throw new NotDeletableError();
-    const existing = await deps.topics.get(id);
+    if (baseIds.has(input.id)) throw new NotDeletableError();
+    const existing = await deps.topics.get(input.id);
     if (!existing) throw new NotFoundError("topic");
-    await deps.topics.delete(id);
-    return { id };
+    // Never delete content someone changed after this admin loaded it.
+    if (existing.version !== input.expectedVersion) throw new ConflictError();
+    await deps.topics.delete(input.id);
+    return { id: input.id };
   }
 
   return {

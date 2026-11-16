@@ -3,6 +3,8 @@ export type Backend = (typeof BACKENDS)[number];
 
 const DEV_SECRET = "dev-only-session-secret-do-not-use-in-prod";
 const MIN_SECRET_LENGTH = 32;
+/** Secrets published in this repository — never acceptable in production. */
+const KNOWN_SECRETS = new Set([DEV_SECRET, "change-me-to-a-long-random-string-32chars"]);
 
 export interface AppConfig {
   backend: Backend;
@@ -21,14 +23,20 @@ function isBackend(value: string): value is Backend {
 
 /** Read and validate configuration from environment variables. */
 export function readConfig(env: Env = process.env): AppConfig {
+  const isProduction = env.NODE_ENV === "production";
+  if (isProduction && !env.DATA_BACKEND) {
+    throw new Error(`DATA_BACKEND must be set in production (${BACKENDS.join(", ")})`);
+  }
   const backend = env.DATA_BACKEND ?? "file";
   if (!isBackend(backend)) {
     throw new Error(`DATA_BACKEND must be one of ${BACKENDS.join(", ")}`);
   }
-  const isProduction = env.NODE_ENV === "production";
   const sessionSecret = env.SESSION_SECRET ?? (isProduction ? "" : DEV_SECRET);
   if (sessionSecret.length < MIN_SECRET_LENGTH) {
     throw new Error(`SESSION_SECRET must be at least ${MIN_SECRET_LENGTH} characters`);
+  }
+  if (isProduction && KNOWN_SECRETS.has(sessionSecret)) {
+    throw new Error("SESSION_SECRET must not be a published example value");
   }
   const config: AppConfig = {
     backend,

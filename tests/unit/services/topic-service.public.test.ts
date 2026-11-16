@@ -62,6 +62,36 @@ describe("topic service — public", () => {
     spy.mockRestore();
   });
 
+  it("keeps admin-hidden topics hidden during an outage once the store has been read", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const repos = createMemoryRepositories({ admins: [] });
+    await repos.topics.upsert(
+      {
+        id: "b-2",
+        origin: "base",
+        content: null,
+        hidden: true,
+        version: 1,
+        createdAt: "x",
+        updatedAt: "x",
+        updatedBy: "A",
+      },
+      null,
+    );
+    let down = false;
+    const flaky = {
+      ...repos.topics,
+      list: () => (down ? Promise.reject(new Error("outage")) : repos.topics.list()),
+    };
+    const svc = createTopicService({ topics: flaky, base, now });
+    await svc.getPublicTopics();
+    down = true;
+    const result = await svc.getPublicTopics();
+    expect(result.degraded).toBe(true);
+    expect(result.topics.map((t) => t.id)).toEqual(["b-1"]);
+    vi.restoreAllMocks();
+  });
+
   it("finds a single visible topic for the report form", async () => {
     const svc = createTopicService({
       topics: createMemoryRepositories({ admins: [] }).topics,

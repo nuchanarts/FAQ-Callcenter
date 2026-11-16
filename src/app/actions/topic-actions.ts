@@ -53,8 +53,9 @@ export async function restoreTopicAction(input: { id: string; expectedVersion: n
 
 export async function deleteTopicAction(input: {
   id: string;
+  expectedVersion: number;
 }): Promise<ActionResult<{ id: string }>> {
   return runAction(async () =>
-    topicService().deleteTopic(await getAdmin(), parseOrThrow(ref, input).id),
+    topicService().deleteTopic(await getAdmin(), parseOrThrow(versioned, input)),
   );
 }

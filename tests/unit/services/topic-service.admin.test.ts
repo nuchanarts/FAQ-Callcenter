@@ -60,7 +60,9 @@ describe("permissions (FR-012, SC-005)", () => {
     await expect(svc.restoreTopic(null, { id: "b-1", expectedVersion: 0 })).rejects.toBeInstanceOf(
       UnauthorizedError,
     );
-    await expect(svc.deleteTopic(null, "c-1")).rejects.toBeInstanceOf(UnauthorizedError);
+    await expect(svc.deleteTopic(null, { id: "c-1", expectedVersion: 1 })).rejects.toBeInstanceOf(
+      UnauthorizedError,
+    );
     await expect(svc.getForAdmin(null, "b-1")).rejects.toBeInstanceOf(UnauthorizedError);
   });
   it("rejects unknown roles", async () => {
@@ -106,7 +108,9 @@ describe("built-in topics: override, hide, restore (Constitution VI)", () => {
   });
 
   it("refuses to delete built-in topics", async () => {
-    await expect(svc.deleteTopic(admin, "b-1")).rejects.toBeInstanceOf(NotDeletableError);
+    await expect(svc.deleteTopic(admin, { id: "b-1", expectedVersion: 0 })).rejects.toBeInstanceOf(
+      NotDeletableError,
+    );
   });
 
   it("restoring a never-edited topic is a harmless no-op", async () => {
@@ -127,7 +131,7 @@ describe("custom topics", () => {
       content: { ...content, title: "แก้" },
     });
     expect(edited).toMatchObject({ title: "แก้", version: 2 });
-    await svc.deleteTopic(admin, "c-1");
+    await svc.deleteTopic(admin, { id: "c-1", expectedVersion: 2 });
     await expect(svc.getForAdmin(admin, "c-1")).rejects.toBeInstanceOf(NotFoundError);
   });
 
@@ -139,7 +143,9 @@ describe("custom topics", () => {
   });
 
   it("deleting a missing topic reports not found", async () => {
-    await expect(svc.deleteTopic(admin, "c-404")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(
+      svc.deleteTopic(admin, { id: "c-404", expectedVersion: 1 }),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 });
 
@@ -164,6 +170,19 @@ describe("validation and conflicts", () => {
     await expect(
       svc.setHidden(admin, { id: "b-1", hidden: true, expectedVersion: 5 }),
     ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("refuses to delete a custom topic someone else just changed", async () => {
+    await svc.createTopic(admin, content);
+    await svc.saveTopic(admin, {
+      id: "c-1",
+      expectedVersion: 1,
+      content: { ...content, title: "ใหม่กว่า" },
+    });
+    await expect(svc.deleteTopic(admin, { id: "c-1", expectedVersion: 1 })).rejects.toBeInstanceOf(
+      ConflictError,
+    );
+    expect((await svc.getForAdmin(admin, "c-1")).title).toBe("ใหม่กว่า");
   });
 
   it("reports unknown ids as not found", async () => {

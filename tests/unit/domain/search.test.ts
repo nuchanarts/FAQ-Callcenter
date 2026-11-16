@@ -87,6 +87,11 @@ describe("searchTopics", () => {
     expect(searchTopics(topics, { query: "authen ไม่มีคำนี้" })).toEqual([]);
   });
 
+  it("finds words anywhere in long solutions, not only the first 200 characters", () => {
+    const long = [topic({ id: "l", solution: `${"ก".repeat(1500)} แจ้งเลข AnyDesk` })];
+    expect(searchTopics(long, { query: "anydesk" }).map((x) => x.id)).toEqual(["l"]);
+  });
+
   it("filters by category", () => {
     expect(searchTopics(topics, { query: "", categoryId: "login" }).map((t) => t.id)).toEqual([
       "c",

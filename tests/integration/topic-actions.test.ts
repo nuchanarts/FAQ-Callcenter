@@ -46,7 +46,7 @@ describe("topic server actions", () => {
       actions.saveTopicAction({ id: "b-login-blank", expectedVersion: 0, content }),
       actions.setTopicHiddenAction({ id: "b-login-blank", hidden: true, expectedVersion: 0 }),
       actions.restoreTopicAction({ id: "b-login-blank", expectedVersion: 0 }),
-      actions.deleteTopicAction({ id: "c-1" }),
+      actions.deleteTopicAction({ id: "c-1", expectedVersion: 1 }),
     ]);
     for (const r of results)
       expect(r).toMatchObject({ ok: false, error: { code: "unauthorized" } });
@@ -91,7 +91,10 @@ describe("topic server actions", () => {
       ok: true,
       data: { hidden: true },
     });
-    expect(await actions.deleteTopicAction({ id })).toEqual({ ok: true, data: { id } });
+    expect(await actions.deleteTopicAction({ id, expectedVersion: 3 })).toEqual({
+      ok: true,
+      data: { id },
+    });
   });
 
   it("return field errors, conflict and not_deletable codes", async () => {
@@ -115,7 +118,9 @@ describe("topic server actions", () => {
       ok: false,
       error: { code: "conflict", message: "มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่" },
     });
-    expect(await actions.deleteTopicAction({ id: "b-login-blank" })).toMatchObject({
+    expect(
+      await actions.deleteTopicAction({ id: "b-login-blank", expectedVersion: 0 }),
+    ).toMatchObject({
       ok: false,
       error: { code: "not_deletable" },
     });

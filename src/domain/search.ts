@@ -8,15 +8,14 @@ export const SEARCH_MAX_LENGTH = 200;
 const WEIGHT = { title: 3, keywords: 2, solution: 1 } as const;
 const HAS_WORD = /[\p{L}\p{N}]/u;
 
-/** NFC, lower-case, collapsed whitespace, max 200 chars; symbol-only input becomes "". */
+/** NFC, lower-case, collapsed whitespace. Used for searchable content (no length cap). */
+export function normalizeText(raw: string): string {
+  return raw.normalize("NFC").toLocaleLowerCase("th").replace(/\s+/g, " ").trim();
+}
+
+/** User input: normalized, max 200 chars; symbol-only input becomes "". */
 export function normalizeQuery(raw: string): string {
-  const q = raw
-    .normalize("NFC")
-    .toLocaleLowerCase("th")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, SEARCH_MAX_LENGTH)
-    .trim();
+  const q = normalizeText(raw).slice(0, SEARCH_MAX_LENGTH).trim();
   return HAS_WORD.test(q) ? q : "";
 }
 
@@ -32,9 +31,9 @@ function haystack(t: EffectiveTopic): Haystack {
   let h = haystackCache.get(t);
   if (!h) {
     h = {
-      title: normalizeQuery(t.title),
-      keywords: t.keywords.map((k) => normalizeQuery(k)).join(" | "),
-      solution: normalizeQuery(toPlainText(t.solution)),
+      title: normalizeText(t.title),
+      keywords: t.keywords.map(normalizeText).join(" | "),
+      solution: normalizeText(toPlainText(t.solution)),
     };
     haystackCache.set(t, h);
   }
