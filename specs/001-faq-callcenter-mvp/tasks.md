@@ -62,7 +62,7 @@ implementation that follows. Commit after every task (XII).
 
 ## Phase 7: US5 — วิธีใช้งาน (P5)
 
-- [ ] T034 [US5] `src/app/guide/page.tsx` + `src/components/features/guide/guide-steps.tsx` (admin section only when signed in); E2E `e2e/guide.spec.ts`
+- [X] T034 [US5] `src/app/guide/page.tsx` + `src/components/features/guide/guide-steps.tsx` (admin section only when signed in); E2E `e2e/guide.spec.ts`
 
 ## Phase 8: Polish
 
