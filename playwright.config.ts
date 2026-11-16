@@ -27,7 +27,7 @@ export default defineConfig({
         viewport: { width: 360, height: 740 },
         permissions: ["clipboard-read", "clipboard-write"],
       },
-      testMatch: /viewer-search|report/,
+      testMatch: /viewer-search|report|guide|admin|layout/,
     },
     {
       name: "no-database",

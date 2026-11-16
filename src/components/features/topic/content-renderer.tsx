@@ -17,7 +17,7 @@ function InlineRow({ row }: { row: Inline[] }) {
             return (
               <code
                 key={i}
-                className="rounded-md border border-line bg-surface-muted px-1.5 py-0.5 font-sans text-[0.95em] font-medium whitespace-nowrap text-herb"
+                className="rounded-md border border-line bg-surface-muted px-1.5 py-0.5 font-sans text-[0.95em] font-medium [overflow-wrap:anywhere] text-herb"
               >
                 {node.text}
               </code>
