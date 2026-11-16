@@ -26,3 +26,8 @@ Thumbs.db
 .turbo/
 playwright-report/
 test-results/
+
+# Local file-backed store
+.data/
+next-env.d.ts
+*.tsbuildinfo
