@@ -45,11 +45,11 @@ implementation that follows. Commit after every task (XII).
 
 - [X] T024 [P] [US2] Tests `tests/unit/domain/report.test.ts` (each required field, unit code 5 digits incl. "12 345", phone 9–15 digits, optional email/AnyDesk, exact template output, "-" for empty optional); implement `src/domain/report.ts`
 - [X] T025 [US2] Component tests `tests/unit/components/report-form.test.tsx` (prefill from topic, field errors keep input, remember-me saves without details, copy); implement `src/components/features/report/{report-form,message-preview}.tsx`, page `src/app/report/page.tsx`, shared `src/components/ui/copy-button.tsx`
-- [ ] T026 [US2] E2E `e2e/report.spec.ts` ("ยังไม่ได้" → prefilled, validation, generate + copy exact text, remember-me across reload)
+- [X] T026 [US2] E2E `e2e/report.spec.ts` ("ยังไม่ได้" → prefilled, validation, generate + copy exact text, remember-me across reload)
 
 ## Phase 5: US3 — Admin (P3)
 
-- [ ] T027 [P] [US3] Tests `tests/unit/services/auth-service.test.ts`; implement `src/services/auth-service.ts`, `src/auth/current-admin.ts` (`getAdmin`, `requireAdmin`)
+- [X] T027 [P] [US3] Tests `tests/unit/services/auth-service.test.ts`; implement `src/services/auth-service.ts`, `src/auth/current-admin.ts` (`getAdmin`, `requireAdmin`)
 - [ ] T028 [P] [US3] Tests `tests/unit/services/topic-service.admin.test.ts` (save override on base, save custom, conflict, hide/show, restore base only, delete custom only → NotDeletableError for base, all require admin, list for admin with statuses); implement admin functions in `src/services/topic-service.ts`
 - [ ] T029 [US3] Integration tests `tests/integration/topic-actions.test.ts` (unauthorized without session, validation fieldErrors, conflict code); implement `src/app/actions/topic-actions.ts`, `src/app/actions/auth-actions.ts` (safe `next`)
 - [ ] T030 [US3] `proxy.ts` (redirect `/admin*` → `/login?next=`); `src/app/login/page.tsx` + `src/components/features/admin/login-form.tsx`
