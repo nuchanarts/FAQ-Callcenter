@@ -38,7 +38,7 @@ implementation that follows. Commit after every task (XII).
 - [X] T019 [US1] Built-in content `src/content/base-topics.ts` (≥ 2 topics per category, valid per schema — test `tests/unit/content/base-topics.test.ts`)
 - [X] T020 [US1] Tests `tests/unit/services/topic-service.public.test.ts`; implement `getPublicTopics()` in `src/services/topic-service.ts`
 - [X] T021 [US1] Integration test `tests/integration/api-topics.test.ts`; implement `src/app/api/topics/route.ts`, `src/app/api/health/route.ts`
-- [ ] T022 [US1] Component tests `tests/unit/components/home.test.tsx`; implement `src/components/features/topic/content-renderer.tsx`, `level-badge.tsx`, `topic-card.tsx`, `src/components/features/home/{basic-steps,search-box,category-tabs,topic-list,home-screen}.tsx`, page `src/app/page.tsx`, header `src/components/features/layout/site-header.tsx`
+- [X] T022 [US1] Component tests `tests/unit/components/home.test.tsx`; implement `src/components/features/topic/content-renderer.tsx`, `level-badge.tsx`, `topic-card.tsx`, `src/components/features/home/{basic-steps,search-box,category-tabs,topic-list,home-screen}.tsx`, page `src/app/page.tsx`, header `src/components/features/layout/site-header.tsx`
 - [ ] T023 [US1] E2E `e2e/viewer-search.spec.ts` (3 steps visible, search ออเทน, category filter + counts, expand/collapse, empty state, axe)
 
 ## Phase 4: US2 — แจ้งปัญหา (P2)

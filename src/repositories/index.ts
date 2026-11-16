@@ -19,7 +19,11 @@ function build(): Repositories {
     case "supabase":
       return createSupabaseRepositories(config.supabase!);
     case "file":
-      return createFileRepositories({ file: join(process.cwd(), config.dataFile), admins });
+      return createFileRepositories({
+        // Runtime data file, not a source asset: keep it out of output file tracing.
+        file: join(/*turbopackIgnore: true*/ process.cwd(), config.dataFile),
+        admins,
+      });
   }
 }
 
