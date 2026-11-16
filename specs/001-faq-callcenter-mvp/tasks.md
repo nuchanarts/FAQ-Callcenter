@@ -81,7 +81,15 @@ Phase 2: T006/T007/T008/T011 together. US1: T016/T017/T018 together. US3: T027/T
 
 ## Progress
 
-- 2026-11-16: Phase 1 complete (T001–T005); Phase 2 T006–T010 complete (52 tests green). Next: T011.
+- 2026-11-16: Phase 1 complete (T001–T005); Phase 2 T006–T010 complete (52 tests green).
+- 2026-11-16: All phases complete (T001–T042). Gate: lint 0, typecheck 0, 218 unit/integration
+  tests (≈95% lines; domain 99%, services 100%), 61 E2E across desktop, 360 px and no-database
+  servers; first-load JS ≤ 187 KB per route; LCP < 1 s locally.
+- Work done beyond the original task list (recorded by T042): `src/app/error.tsx`,
+  `src/app/not-found.tsx`, `scripts/hash-password.ts` (`npm run hash-password`),
+  `src/hooks/use-unsaved-changes.ts`, `e2e/performance.spec.ts`, `e2e/layout.spec.ts`,
+  shareable `/?q=&category=` URLs, web-interface-guidelines fixes (commit 7d2768e) and
+  code-review fixes (commit dba7496).
 
 ## Strategy
 
@@ -94,4 +102,4 @@ Found by `/speckit-analyze` re-check after T001–T038 (0 critical).
 - [X] T039 [P] Shared loading skeleton for data views (FR-022): `src/components/ui/skeleton.tsx`, `src/app/loading.tsx`, `src/app/admin/loading.tsx`; unit test in `tests/unit/components/ui.test.tsx`
 - [X] T040 [P] Verify 360 px for every screen (FR-021): run `e2e/guide.spec.ts` and `e2e/admin.spec.ts` on the mobile-360 project and add a no-horizontal-scroll check for `/guide`, `/login`, `/admin`
 - [X] T041 [P] Sync docs with code: `contracts/interfaces.md` (delete takes `expectedVersion`; degraded fallback keeps last-known flags; proxy verifies tokens), `research.md` R4, `plan.md` structure (`src/proxy.ts`)
-- [ ] T042 Record polish work done outside tasks: `src/app/error.tsx`, `src/app/not-found.tsx`, `scripts/hash-password.ts`, `src/hooks/use-unsaved-changes.ts`, `e2e/performance.spec.ts`, shareable `?q=&category=`, code-review fixes (commit dba7496)
+- [X] T042 Record polish work done outside tasks: `src/app/error.tsx`, `src/app/not-found.tsx`, `scripts/hash-password.ts`, `src/hooks/use-unsaved-changes.ts`, `e2e/performance.spec.ts`, shareable `?q=&category=`, code-review fixes (commit dba7496)
