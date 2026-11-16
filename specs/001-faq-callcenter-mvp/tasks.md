@@ -21,7 +21,8 @@ every task (Constitution V).
 - [ ] T001 Create Next.js 16 project files: `package.json` (scripts dev/build/start/lint/typecheck/test/test:coverage/test:e2e), `tsconfig.json` (`strict`, `@/*` → `src/*`), `next.config.ts`, `postcss.config.mjs`, `.env.example`, update `.gitignore` with `.data/`
 - [ ] T002 [P] Configure ESLint (`eslint.config.mjs`, next core-web-vitals + typescript) and Prettier (`.prettierrc`)
 - [ ] T003 [P] Configure Vitest in `vitest.config.ts` (node + jsdom projects, `@/` alias, coverage thresholds 80% global / 90% `src/domain/**` and `src/services/**`) and `tests/setup.ts`
-- [ ] T004 [P] Configure Playwright in `playwright.config.ts` (chromium, `webServer` = build + start with `DATA_BACKEND=memory`, port 3100)
+- [ ] T004 [P] Configure Playwright in `playwright.config.ts` (projects: desktop chromium + mobile 375 px viewport, `webServer` = build + start with `DATA_BACKEND=memory`, port 3100)
+- [ ] T004a Configure pre-commit hooks with `simple-git-hooks` + `lint-staged` in `package.json` (ESLint --fix, Prettier, `tsc --noEmit`, `vitest related --run`) — Constitution V
 
 ---
 
@@ -43,7 +44,7 @@ every task (Constitution V).
 - [ ] T018 [P] Implement i18n dictionaries `src/i18n/messages/th.ts`, `src/i18n/messages/en.ts`, helpers `src/i18n/index.ts`, test key parity in `tests/unit/i18n/messages.test.ts`
 - [ ] T019 [P] Implement design tokens + base styles in `src/app/globals.css` and root layout `src/app/layout.tsx` (IBM Plex Sans Thai, dark mode)
 - [ ] T020 [P] Implement shared UI primitives in `src/components/ui/` (button, input, textarea, select, badge, card, dialog, kbd, toast, empty-state, error-state, skeleton, field) with tests `tests/unit/components/ui.test.tsx`
-- [ ] T021 [P] Implement hooks `src/hooks/use-hotkeys.ts`, `src/hooks/use-debounce.ts`, `src/hooks/use-clipboard.ts` with tests in `tests/unit/hooks/`
+- [ ] T021 [P] Implement hooks `src/hooks/use-hotkeys.ts`, `src/hooks/use-debounce.ts`, `src/hooks/use-clipboard.ts` with tests in `tests/unit/hooks/` (incl. clipboard-blocked → returns `blocked` so UI selects the answer text for manual copy)
 
 **Checkpoint**: Foundation ready.
 
@@ -61,7 +62,7 @@ every task (Constitution V).
 - [ ] T027 [US1] Implement `src/app/api/search/route.ts`, `src/app/api/health/route.ts`, and `src/auth/current-user.ts` (`getCurrentUser`, `requireUser`, `requireRole`)
 - [ ] T028 [P] [US1] Write component tests `tests/unit/components/search.test.tsx` (typing triggers search, arrow/enter selection, `c` copies, `/` focuses, empty state)
 - [ ] T029 [US1] Implement search UI in `src/components/features/search/` (search-screen, result-list, answer-panel, highlight-text, category-filter, shortcut-help) and page `src/app/(app)/page.tsx`
-- [ ] T030 [US1] Write E2E `e2e/agent-search.spec.ts` (search TH + EN, keyboard flow, copy toast, category filter, empty state, axe scan)
+- [ ] T030 [US1] Write E2E `e2e/agent-search.spec.ts` (search TH + EN, keyboard flow, copy toast, category filter, empty state, axe scan, results visible < 500 ms after typing stops, single-column layout on 375 px project)
 
 ---
 
@@ -73,9 +74,9 @@ every task (Constitution V).
 - [ ] T032 [US2] Implement `createFaq`, `updateFaq`, `setFaqStatus`, `deleteFaq`, `listFaqsForAdmin` in `src/services/faq-service.ts`
 - [ ] T033 [P] [US2] Write tests `tests/unit/services/category-service.test.ts` (create, duplicate name case-insensitive, rename, delete in-use → CategoryInUseError, agent forbidden)
 - [ ] T034 [US2] Implement `src/services/category-service.ts`
-- [ ] T035 [P] [US2] Write integration tests `tests/integration/admin-actions.test.ts` for server actions (ActionResult shapes, forbidden for agent, field errors)
+- [ ] T035 [P] [US2] Write integration tests `tests/integration/admin-actions.test.ts` for server actions (ActionResult shapes, forbidden for agent, field errors, stale `expectedVersion` → `conflict` code)
 - [ ] T036 [US2] Implement thin actions `src/app/actions/faq-actions.ts` and `src/app/actions/category-actions.ts`
-- [ ] T037 [US2] Implement admin UI: `src/components/features/admin/` (faq-table, faq-form shared by create/edit, status-toggle, delete-dialog, category-manager) and pages `src/app/(app)/admin/page.tsx`, `src/app/(app)/admin/faqs/new/page.tsx`, `src/app/(app)/admin/faqs/[id]/page.tsx`, `src/app/(app)/admin/categories/page.tsx`
+- [ ] T037 [US2] Implement admin UI: `src/components/features/admin/` (faq-table with status filter + category filter + text search per FR-016, faq-form shared by create/edit showing conflict message on `conflict`, status-toggle, delete-dialog, category-manager) and pages `src/app/(app)/admin/page.tsx`, `src/app/(app)/admin/faqs/new/page.tsx`, `src/app/(app)/admin/faqs/[id]/page.tsx`, `src/app/(app)/admin/categories/page.tsx`
 - [ ] T038 [US2] Write E2E `e2e/admin-faq.spec.ts` (create draft → publish → agent sees → edit → unpublish → agent can't see; validation keeps input; category CRUD)
 
 ---
@@ -93,7 +94,7 @@ every task (Constitution V).
 
 ## Phase 6: User Story 4 — How to use guide (P4)
 
-- [ ] T043 [US4] Implement `src/app/(app)/guide/page.tsx` + `src/components/features/guide/` (step sections with illustrations, shortcut table from shared shortcut registry `src/lib/shortcuts.ts`, admin section only for admins)
+- [ ] T043 [US4] Implement `src/app/(app)/guide/page.tsx` + `src/components/features/guide/` (icon-based step cards, shortcut table from shared shortcut registry `src/lib/shortcuts.ts`, admin section only for admins)
 - [ ] T044 [US4] Write E2E `e2e/guide.spec.ts` (nav link, `?` panel opens / `Esc` closes, admin section visibility)
 
 ---
@@ -109,7 +110,7 @@ every task (Constitution V).
 
 - [ ] T047 [P] Implement Supabase adapter `src/repositories/supabase/index.ts` and migration `supabase/migrations/0001_init.sql` (tables, indexes, RLS); contract runner skipped unless `SUPABASE_TEST_URL` set
 - [ ] T048 [P] Write `README.md` (run, test, demo accounts, architecture, production setup)
-- [ ] T049 Run lint, typecheck, unit+integration with coverage, build, E2E; fix all failures
+- [ ] T049 Run lint, typecheck, unit+integration with coverage, build, E2E; verify route first-load JS ≤ 200 KB gz from build output (Constitution IV); fix all failures
 - [ ] T050 Code review against constitution (code-review, web-design-guidelines) and apply fixes
 
 ---
