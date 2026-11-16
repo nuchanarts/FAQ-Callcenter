@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+.pnp*
+
+# Build output
+.next/
+dist/
+build/
+out/
+coverage/
+
+# Environment & secrets (Constitution Principle V)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Logs & OS
+*.log
+.DS_Store
+Thumbs.db
+
+# Tooling
+.vercel/
+.turbo/
+playwright-report/
+test-results/
