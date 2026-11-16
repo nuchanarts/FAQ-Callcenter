@@ -22,13 +22,12 @@ Sections added:
 Sections removed: none
 
 Templates requiring updates:
-  ⚠ .specify/templates/plan-template.md   — not present yet (Spec Kit not initialized);
-     when added, its "Constitution Check" gate MUST list Principles I–VIII.
-  ⚠ .specify/templates/spec-template.md   — not present yet; when added, ensure
-     user stories carry testable acceptance criteria (Principle II) and UX/perf
-     requirements (Principles III–IV).
-  ⚠ .specify/templates/tasks-template.md  — not present yet; when added, test tasks
-     MUST precede implementation tasks and each task MUST end with a commit (Principle V).
+  ✅ .specify/templates/plan-template.md   — "Constitution Check" gates are derived from
+     this file at plan time; /speckit-plan MUST evaluate Principles I–VIII.
+  ✅ .specify/templates/spec-template.md   — compatible; user stories carry testable
+     acceptance criteria (Principle II); add UX/perf requirements (III–IV) per spec.
+  ✅ .specify/templates/tasks-template.md  — compatible; under Principle II, test tasks
+     are MANDATORY (not optional) and precede implementation; commit per task (V).
 
 Deferred TODOs: none
 -->
