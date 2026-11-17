@@ -33,3 +33,6 @@ next-env.d.ts
 *.tsbuildinfo
 
 .playwright-mcp/
+
+.vercel
+.env*

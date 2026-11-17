@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LifeBuoy, LogOut } from "lucide-react";
+import { LifeBuoy, LockKeyhole, LogOut } from "lucide-react";
 import { getAdmin } from "@/auth/current-admin";
 import { signOutAction } from "@/app/actions/auth-actions";
 import { NavLinks } from "@/components/features/layout/nav-links";
@@ -26,6 +26,17 @@ export async function SiteHeader() {
         <div className="flex items-center gap-1">
           <NavLinks isAdmin={!!admin} />
           <SkinPicker />
+          {!admin && (
+            // Staff entry point to content management (viewers never need to sign in).
+            <Link
+              href="/login"
+              title={th.nav.staffLogin}
+              className="flex h-10 items-center gap-1.5 rounded-soft px-2.5 text-[0.95rem] font-semibold text-ink-muted hover:bg-surface-muted hover:text-ink"
+            >
+              <LockKeyhole aria-hidden className="size-[1.1rem]" />
+              <span className="max-lg:sr-only">{th.nav.staffLoginShort}</span>
+            </Link>
+          )}
           {admin && (
             <form action={signOutAction}>
               <button

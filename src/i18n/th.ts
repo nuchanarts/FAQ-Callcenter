@@ -22,6 +22,8 @@ export const th = {
     manuals: "คู่มือ & วิดีโอ",
     admin: "จัดการเนื้อหา",
     signOut: "ออกจากระบบ",
+    staffLogin: "เข้าสู่ระบบเจ้าหน้าที่ (จัดการคำถาม-คำตอบ FAQ)",
+    staffLoginShort: "เจ้าหน้าที่",
     skipToContent: "ข้ามไปยังเนื้อหาหลัก",
     menu: "เมนู",
   },
