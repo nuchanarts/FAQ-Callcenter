@@ -5,22 +5,34 @@
    shadows and type are defined. Components use the Tailwind
    utilities mapped below (bg-paper, text-ink, border-line, …).
 ---------------------------------------------------------------- */
+/* Skins: the viewer picks one from the header (SkinPicker). No attribute = "moph",
+   matched to the MOPH central platform (pale mint page, deep-green hero, orange accent).
+   Each skin only swaps the brand/hero/paper tones; status colors stay shared. */
 :root {
-  --paper: #f5f8f4;
+  --paper: #eaf6f0;
   --surface: #ffffff;
-  --surface-muted: #ecf2ed;
+  --surface-muted: #e3f2ea;
   --ink: #13241c;
-  --ink-muted: #4a5c53;
-  --ink-faint: #5a6a62;
-  --line: #d5e0d8;
-  --line-strong: #b7c7bc;
+  --ink-muted: #46594f;
+  --ink-faint: #56685e;
+  --line: #cfe5d9;
+  --line-strong: #a9cdb9;
 
-  --herb: #0e6a4e;
-  --herb-strong: #0a5039;
-  --herb-soft: #ddefe6;
+  --herb: #13784a;
+  --herb-strong: #0d5a37;
+  --herb-soft: #d6efe2;
   --on-herb: #ffffff;
-  --hero: #0e3d2e;
-  --hero-ink: #eaf5ef;
+  /* Hero: two-stop gradient, its text color, three accents for the artwork,
+     and the halo color around the hero search. */
+  --hero: #1f8a55;
+  --hero-2: #0e5434;
+  --hero-ink: #ffffff;
+  --hero-edge: #0a3d26;
+  --art-1: #6fd3a5;
+  --art-2: #9ad6ff;
+  --art-3: #f26a2e;
+  --glow: #ffffff;
+  --accent: #d9480f;
 
   --level-self: #11704f;
   --level-self-soft: #dcf1e6;
@@ -37,34 +49,138 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #0d1612;
-    --surface: #14201a;
-    --surface-muted: #1a2a22;
-    --ink: #e5efe9;
-    --ink-muted: #a9bbb1;
-    --ink-faint: #8a9c92;
-    --line: #26372e;
-    --line-strong: #36493f;
-    --herb: #4cc79a;
-    --herb-strong: #77d8b3;
-    --herb-soft: #173a2d;
-    --on-herb: #06281c;
-    --hero: #0a2a20;
-    --hero-ink: #e5f4ec;
-    --level-self: #6fd6ac;
-    --level-self-soft: #133528;
-    --level-partial: #f1c15a;
-    --level-partial-soft: #3a2c0d;
-    --level-team: #9db3f2;
-    --level-team-soft: #1c2645;
-    --danger: #ff8a80;
-    --danger-soft: #3d1715;
-    --focus: #7ab7ff;
-    --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.7);
-    color-scheme: dark;
-  }
+:root[data-skin="mint"] {
+  --paper: #f6fbf8;
+  --surface-muted: #edf6f1;
+  --line: #d5e6dc;
+  --line-strong: #b4cdbf;
+  --herb: #0d7a58;
+  --herb-strong: #09583f;
+  --herb-soft: #daf3e7;
+  --hero: #d9f6e8;
+  --hero-2: #e9f7fd;
+  --hero-ink: #10302a;
+  --hero-edge: #b4e3cc;
+  --art-1: #34c48f;
+  --art-2: #7cc8f2;
+  --art-3: #ffd27a;
+  --glow: var(--herb);
+}
+
+:root[data-skin="sky"] {
+  --hero-edge: #b0d2f5;
+  --glow: var(--herb);
+  --paper: #f5f9fe;
+  --surface-muted: #ebf3fc;
+  --line: #d3e2f2;
+  --line-strong: #b0c8e3;
+  --herb: #1a62c4;
+  --herb-strong: #134a96;
+  --herb-soft: #dceafb;
+  --hero: #d6eafd;
+  --hero-2: #eef0ff;
+  --hero-ink: #102846;
+  --art-1: #4b9cf0;
+  --art-2: #9ab4ff;
+  --art-3: #ffd27a;
+  --ink: #12233a;
+  --ink-muted: #475a73;
+  --ink-faint: #56677e;
+}
+
+:root[data-skin="peach"] {
+  --hero-edge: #f6c4a8;
+  --glow: var(--herb);
+  --paper: #fffaf6;
+  --surface-muted: #fdf0e8;
+  --line: #f1dccd;
+  --line-strong: #e2c0a8;
+  --herb: #c0461a;
+  --herb-strong: #923411;
+  --herb-soft: #fde3d6;
+  --hero: #ffe3d3;
+  --hero-2: #fff4d9;
+  --hero-ink: #3b1b0e;
+  --art-1: #ff9466;
+  --art-2: #ffc46b;
+  --art-3: #7fd3b5;
+  --ink: #2b1a12;
+  --ink-muted: #63493c;
+  --ink-faint: #725a4d;
+}
+
+:root[data-skin="lavender"] {
+  --hero-edge: #cfbff3;
+  --glow: var(--herb);
+  --paper: #f9f7fe;
+  --surface-muted: #f1ecfc;
+  --line: #e0d8f3;
+  --line-strong: #c5b7e6;
+  --herb: #6a3fc4;
+  --herb-strong: #4f2b9a;
+  --herb-soft: #ebe2fc;
+  --hero: #e7defd;
+  --hero-2: #fde4f1;
+  --hero-ink: #261646;
+  --art-1: #a07cf0;
+  --art-2: #f59ac8;
+  --art-3: #ffd27a;
+  --ink: #1f1733;
+  --ink-muted: #574c6e;
+  --ink-faint: #655a7b;
+}
+
+/* The original deep-green look, kept for anyone who prefers it. */
+:root[data-skin="classic"] {
+  --hero-edge: #082b1f;
+  --glow: #ffffff;
+  --paper: #f5f8f4;
+  --surface-muted: #ecf2ed;
+  --line: #d5e0d8;
+  --line-strong: #b7c7bc;
+  --herb: #0e6a4e;
+  --herb-strong: #0a5039;
+  --herb-soft: #ddefe6;
+  --hero: #0e3d2e;
+  --hero-2: #145441;
+  --hero-ink: #eaf5ef;
+  --art-1: #4cc79a;
+  --art-2: #9fe0c4;
+  --art-3: #f1c15a;
+}
+
+:root[data-skin="night"] {
+  --hero-edge: #1c3a2e;
+  --glow: var(--herb);
+  --paper: #0d1612;
+  --surface: #14201a;
+  --surface-muted: #1a2a22;
+  --ink: #e5efe9;
+  --ink-muted: #a9bbb1;
+  --ink-faint: #8a9c92;
+  --line: #26372e;
+  --line-strong: #36493f;
+  --herb: #4cc79a;
+  --herb-strong: #77d8b3;
+  --herb-soft: #173a2d;
+  --on-herb: #06281c;
+  --hero: #0a2a20;
+  --hero-2: #0f3a3a;
+  --hero-ink: #e5f4ec;
+  --art-1: #4cc79a;
+  --art-2: #5aa7d6;
+  --art-3: #f1c15a;
+  --level-self: #6fd6ac;
+  --level-self-soft: #133528;
+  --level-partial: #f1c15a;
+  --level-partial-soft: #3a2c0d;
+  --level-team: #9db3f2;
+  --level-team-soft: #1c2645;
+  --danger: #ff8a80;
+  --danger-soft: #3d1715;
+  --focus: #7ab7ff;
+  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 28px -14px rgb(0 0 0 / 0.7);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -82,6 +198,11 @@
   --color-on-herb: var(--on-herb);
   --color-hero: var(--hero);
   --color-hero-ink: var(--hero-ink);
+  --color-art-1: var(--art-1);
+  --color-art-2: var(--art-2);
+  --color-art-3: var(--art-3);
+  --color-accent: var(--accent);
+  --color-hero-edge: var(--hero-edge);
   --color-level-self: var(--level-self);
   --color-level-self-soft: var(--level-self-soft);
   --color-level-partial: var(--level-partial);
@@ -110,6 +231,12 @@
     font-size: 1.0625rem;
     line-height: 1.7;
     min-height: 100dvh;
+  }
+  /* Avoid a lone short word on the last line (common with Thai line breaking). */
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
   }
   h1,
   h2,
@@ -154,6 +281,66 @@
     opacity: 0;
     transform: translateY(8px);
   }
+}
+
+/* Hero backdrop: skin gradient + soft color blobs + a faint dot grid. */
+.hero-bg {
+  background:
+    radial-gradient(
+        circle at 1px 1px,
+        color-mix(in srgb, var(--hero-ink) 10%, transparent) 1px,
+        transparent 0
+      )
+      0 0 / 22px 22px,
+    radial-gradient(
+      40rem 22rem at 88% 10%,
+      color-mix(in srgb, var(--art-2) 35%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      30rem 20rem at 5% 100%,
+      color-mix(in srgb, var(--art-1) 30%, transparent),
+      transparent 70%
+    ),
+    linear-gradient(120deg, var(--hero), var(--hero-2));
+}
+
+/* Soft breathing halo that draws the eye to the hero search while it is empty. */
+@keyframes search-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 6px color-mix(in srgb, var(--glow) 22%, transparent),
+      0 18px 40px -18px rgb(0 0 0 / 0.35);
+  }
+  50% {
+    box-shadow:
+      0 0 0 13px color-mix(in srgb, var(--glow) 34%, transparent),
+      0 18px 40px -18px rgb(0 0 0 / 0.35);
+  }
+}
+
+.search-attention {
+  animation: search-glow 2.4s ease-in-out infinite;
+}
+
+/* Gentle float for the hero artwork pieces. */
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.float-slow {
+  animation: float-y 5s ease-in-out infinite;
+}
+
+.float-slower {
+  animation: float-y 7s ease-in-out infinite reverse;
 }
 
 @media (prefers-reduced-motion: reduce) {

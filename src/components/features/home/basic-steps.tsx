@@ -20,7 +20,7 @@ export function BasicSteps() {
         {th.basicSteps.steps.map((step, i) => (
           <li
             key={step.title}
-            className="relative flex gap-3 border-line px-5 py-4 not-last:border-b sm:not-last:border-r sm:not-last:border-b-0 sm:not-last:border-dashed lg:py-3"
+            className="relative flex gap-3 border-line px-5 py-4 not-last:border-b sm:not-last:border-r sm:not-last:border-b-0 sm:not-last:border-dashed lg:pt-3 lg:pb-4"
           >
             <span
               aria-hidden="true"
@@ -28,10 +28,25 @@ export function BasicSteps() {
             >
               {i + 1}
             </span>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-semibold text-ink">{step.title}</h3>
-              <p className="mt-0.5 text-[0.97rem] leading-relaxed text-ink-muted lg:text-[0.93rem] lg:leading-snug">
+              {/* Thai needs ≥1.6 line-height: stacked vowels/tone marks collide when tighter. */}
+              <p className="mt-1 text-[0.97rem] leading-[1.65] text-ink-muted lg:text-[0.93rem]">
                 {step.body}
+                {step.link && (
+                  <>
+                    {" "}
+                    <a
+                      href={step.link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-herb underline underline-offset-2 hover:text-herb-strong"
+                    >
+                      {step.link.label}
+                    </a>{" "}
+                    {"after" in step ? step.after : null}
+                  </>
+                )}
               </p>
             </div>
           </li>

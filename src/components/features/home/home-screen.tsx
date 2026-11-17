@@ -14,6 +14,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { buttonClass } from "@/components/ui/button";
 import { CategoryTabs } from "@/components/features/home/category-tabs";
 import { DegradedNotice } from "@/components/features/home/degraded-notice";
+import { HeroArt } from "@/components/features/home/hero-art";
+import { logTopicView } from "@/lib/log-event";
 import { SearchBox } from "@/components/features/home/search-box";
 import { TopicCard, TopicMeta } from "@/components/features/topic/topic-card";
 import { TopicDetail } from "@/components/features/topic/topic-detail";
@@ -90,15 +92,18 @@ export function HomeScreen({
 
   return (
     <>
-      <section className="bg-hero text-hero-ink">
-        <div className="page-width pt-8 pb-20 lg:pt-7 lg:pb-16">
-          <h1 className="text-[1.85rem] leading-tight font-bold sm:text-[2.35rem]">
-            {th.app.tagline}
-          </h1>
-          <p className="mt-2 max-w-2xl text-hero-ink/80">{th.app.heroLead}</p>
-          <div className="mt-5 max-w-3xl">
-            <SearchBox ref={searchRef} value={query} onChange={setQuery} />
+      <section className="hero-bg overflow-hidden border-b-4 border-hero-edge text-hero-ink">
+        <div className="page-width grid items-center gap-6 pt-8 pb-20 lg:grid-cols-[minmax(0,1fr)_22rem] lg:pt-7 lg:pb-16 2xl:grid-cols-[minmax(0,1fr)_26rem]">
+          <div className="min-w-0">
+            <h1 className="text-[1.85rem] leading-tight font-bold sm:text-[2.35rem]">
+              {th.app.tagline}
+            </h1>
+            <p className="mt-2 max-w-2xl text-hero-ink/80">{th.app.heroLead}</p>
+            <div className="mt-7">
+              <SearchBox ref={searchRef} value={query} onChange={setQuery} />
+            </div>
           </div>
+          <HeroArt className="hidden w-full lg:block" />
         </div>
       </section>
 
@@ -133,7 +138,10 @@ export function HomeScreen({
                       topic={t}
                       wide={wide}
                       selected={t.id === selected.id}
-                      onSelect={() => setSelectedId(t.id)}
+                      onSelect={() => {
+                        setSelectedId(t.id);
+                        logTopicView(t.id);
+                      }}
                     />
                   ))}
                 </div>

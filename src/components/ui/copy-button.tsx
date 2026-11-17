@@ -23,10 +23,12 @@ interface CopyButtonProps extends Omit<ButtonProps, "onClick" | "children"> {
   label: string;
   /** Element whose text is selected when the clipboard is blocked (manual Ctrl+C fallback). */
   fallbackTarget?: RefObject<HTMLElement | null>;
+  /** Called after a successful copy (e.g. to show the "what next" steps). */
+  onCopied?: () => void;
 }
 
 /** One-click copy with confirmation; falls back to selecting the text (spec edge case). */
-export function CopyButton({ text, label, fallbackTarget, ...rest }: CopyButtonProps) {
+export function CopyButton({ text, label, fallbackTarget, onCopied, ...rest }: CopyButtonProps) {
   const { copy } = useClipboard();
   const toast = useToast();
   const [copied, setCopied] = useState(false);
@@ -37,6 +39,7 @@ export function CopyButton({ text, label, fallbackTarget, ...rest }: CopyButtonP
       toast.show(th.copy.copied);
       setCopied(true);
       setTimeout(() => setCopied(false), COPIED_MS);
+      onCopied?.();
     } else {
       selectContents(fallbackTarget?.current ?? null);
       toast.show(th.copy.blocked, "error");

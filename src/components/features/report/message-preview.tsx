@@ -1,19 +1,34 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { CopyButton } from "@/components/ui/copy-button";
+import { LineOpenButton, LineSteps } from "@/components/features/report/line-handoff";
+import { SlaAfterCopy } from "@/components/features/report/sla-card";
 import { th } from "@/i18n/th";
 import { cn } from "@/lib/cn";
+import { logEvent } from "@/lib/log-event";
 
 interface MessagePreviewProps {
   message: string;
   /** Live, not-yet-validated preview: muted styling and no copy button. */
   draft?: boolean;
+  /** The validated form values behind `message`; logged once when it is copied or sent. */
+  report?: Record<string, string>;
 }
 
 /** The message as a perforated paper slip: a live draft while typing, then ready to copy. */
-export function MessagePreview({ message, draft = false }: MessagePreviewProps) {
+export function MessagePreview({ message, draft = false, report }: MessagePreviewProps) {
   const textRef = useRef<HTMLPreElement>(null);
+  const [copied, setCopied] = useState(false);
+  const loggedRef = useRef<string | null>(null);
+  const markCopied = (channel: "line" | "copy") => {
+    setCopied(true);
+    // One Sheet row per finished message, however many times it is copied.
+    if (report && loggedRef.current !== message) {
+      loggedRef.current = message;
+      logEvent({ kind: "report", channel, report });
+    }
+  };
   return (
     <section
       aria-labelledby="preview-title"
@@ -35,6 +50,7 @@ export function MessagePreview({ message, draft = false }: MessagePreviewProps) 
             {draft ? th.report.draftHint : th.report.previewHint}
           </p>
         </div>
+        {!draft && copied && <LineSteps />}
         <pre
           ref={textRef}
           data-testid={draft ? "report-draft" : "report-message"}
@@ -46,7 +62,24 @@ export function MessagePreview({ message, draft = false }: MessagePreviewProps) 
           {message}
         </pre>
         {!draft && (
-          <CopyButton text={message} label={th.report.copy} size="lg" fallbackTarget={textRef} />
+          <>
+            <div className="flex flex-col gap-3">
+              <LineOpenButton
+                message={message}
+                fallbackTarget={textRef}
+                onCopied={() => markCopied("line")}
+              />
+              <CopyButton
+                text={message}
+                label={th.report.copy}
+                size="lg"
+                variant="secondary"
+                fallbackTarget={textRef}
+                onCopied={() => markCopied("copy")}
+              />
+            </div>
+            <SlaAfterCopy />
+          </>
         )}
       </div>
     </section>

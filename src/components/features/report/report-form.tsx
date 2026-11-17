@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { ShieldCheck } from "lucide-react";
+import { MessageSquareText, ShieldCheck, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
@@ -34,8 +34,9 @@ function pickReporter(values: ReportInput): Reporter {
 }
 
 /**
- * Report form (US2). Builds the team's standard message locally — nothing is sent to the
- * server, and reporter details are remembered only in this browser when opted in (Constitution V).
+ * Report form (US2). Builds the team's standard message in the browser. When the caller
+ * copies it / opens LINE, the report is logged to the team's Google Sheet for follow-up
+ * (see /api/log). Reporter details are remembered in this browser only when opted in.
  */
 export function ReportForm({ topicTitle }: { topicTitle?: string }) {
   const stored = useLocalStorage<Reporter | null>(REPORTER_STORAGE_KEY, null);
@@ -130,10 +131,19 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           </p>
         )}
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-3 font-display text-xl font-semibold">
-            {th.report.reporterSection}
-          </legend>
+        <fieldset className="flex flex-col gap-4 rounded-soft border border-line bg-surface p-5 shadow-raise sm:p-6">
+          <legend className="sr-only">{th.report.reporterSection}</legend>
+          <div aria-hidden className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-full bg-herb-soft text-herb">
+              <UserRound className="size-6" />
+            </span>
+            <div>
+              <p className="font-display text-xl font-semibold">
+                <span className="text-herb">1.</span> {th.report.reporterSection}
+              </p>
+              <p className="text-[0.95rem] text-ink-faint">{th.report.reporterLead}</p>
+            </div>
+          </div>
           <div className="grid gap-4 xl:grid-cols-2">
             {text("fullName", { autoComplete: "name" })}
             {text("position", { autoComplete: "organization-title" })}
@@ -166,10 +176,19 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           </label>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-4">
-          <legend className="mb-3 font-display text-xl font-semibold">
-            {th.report.problemSection}
-          </legend>
+        <fieldset className="flex flex-col gap-4 rounded-soft border border-line bg-surface p-5 shadow-raise sm:p-6">
+          <legend className="sr-only">{th.report.problemSection}</legend>
+          <div aria-hidden className="flex items-center gap-3">
+            <span className="flex size-11 items-center justify-center rounded-full bg-herb-soft text-herb">
+              <MessageSquareText className="size-6" />
+            </span>
+            <div>
+              <p className="font-display text-xl font-semibold">
+                <span className="text-herb">2.</span> {th.report.problemSection}
+              </p>
+              <p className="text-[0.95rem] text-ink-faint">{th.report.problemLead}</p>
+            </div>
+          </div>
           <Field
             label={f.details}
             name="details"
@@ -189,14 +208,15 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           </Field>
         </fieldset>
 
-        <Button type="submit" size="lg" className="self-start">
+        <Button type="submit" size="lg" className="self-start px-8">
+          <Sparkles aria-hidden className="size-5" />
           {th.report.generate}
         </Button>
       </form>
 
       <div className="lg:sticky lg:top-24">
         {message ? (
-          <MessagePreview message={message} />
+          <MessagePreview message={message} report={values} />
         ) : (
           <MessagePreview message={formatReportDraft(values)} draft />
         )}

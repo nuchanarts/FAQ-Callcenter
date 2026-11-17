@@ -3,6 +3,7 @@ import { LifeBuoy, LogOut } from "lucide-react";
 import { getAdmin } from "@/auth/current-admin";
 import { signOutAction } from "@/app/actions/auth-actions";
 import { NavLinks } from "@/components/features/layout/nav-links";
+import { SkinPicker } from "@/components/features/layout/skin-picker";
 import { th } from "@/i18n/th";
 
 export async function SiteHeader() {
@@ -24,6 +25,7 @@ export async function SiteHeader() {
         </Link>
         <div className="flex items-center gap-1">
           <NavLinks isAdmin={!!admin} />
+          <SkinPicker />
           {admin && (
             <form action={signOutAction}>
               <button

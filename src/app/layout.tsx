@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Anuphan, Sarabun } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
+import { skinBootScript } from "@/components/features/layout/skins";
 import { th } from "@/i18n/th";
 import "./globals.css";
 
@@ -28,14 +29,19 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0e3d2e" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a2a20" },
+    { media: "(prefers-color-scheme: light)", color: "#1f8a55" },
+    { media: "(prefers-color-scheme: dark)", color: "#1f8a55" },
   ],
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="th" className={`${sarabun.variable} ${anuphan.variable}`}>
+    <html lang="th" className={`${sarabun.variable} ${anuphan.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Static, code-defined script (no user input): applies the saved skin before paint. */}
+        {/* eslint-disable-next-line react/no-danger */}
+        <script dangerouslySetInnerHTML={{ __html: skinBootScript }} />
+      </head>
       <body className="antialiased">
         <a
           href="#main"

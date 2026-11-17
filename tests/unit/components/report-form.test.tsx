@@ -72,6 +72,45 @@ describe("ReportForm", () => {
     expect(await screen.findByText("คัดลอกแล้ว")).toBeInTheDocument();
   });
 
+  async function generateForLine() {
+    setup();
+    await fillReporter();
+    await userEvent.type(screen.getByLabelText(/^รายละเอียดปัญหา/), "เครื่องไม่ตอบสนอง");
+    await userEvent.click(screen.getByRole("button", { name: "สร้างข้อความ" }));
+    return screen.getByRole("link", { name: /เปิด LINE พร้อมข้อความ/ });
+  }
+
+  it("on a PC opens the LINE app (line://) with the message, copies it, and shows the steps", async () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    const link = await generateForLine();
+    expect(screen.queryByText("เปิด LINE พร้อมข้อความแล้ว ✓")).toBeNull();
+
+    await userEvent.click(link);
+    const [url, target] = open.mock.calls[0]!;
+    expect(target).toBe("_self");
+    expect(String(url).startsWith("line://oaMessage/%40977tcqko/?")).toBe(true);
+    expect(decodeURIComponent(String(url).split("?")[1]!)).toContain("เครื่องไม่ตอบสนอง");
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining("เครื่องไม่ตอบสนอง"));
+    expect(await screen.findByText("เปิด LINE พร้อมข้อความแล้ว ✓")).toBeInTheDocument();
+    expect(screen.getByText(/กด Ctrl \+ V/)).toBeInTheDocument();
+    expect(screen.queryByText("เปิดผ่านเว็บ LINE แทน")).toBeNull();
+    expect(screen.getByRole("link", { name: "หรือกดเพิ่มเพื่อนที่นี่" })).toHaveAttribute(
+      "href",
+      "https://line.me/R/ti/p/%40977tcqko",
+    );
+    open.mockRestore();
+  });
+
+  it("on a phone opens the line.me link (which hands off to the LINE app)", async () => {
+    const open = vi.spyOn(window, "open").mockReturnValue(null);
+    const ua = vi.spyOn(navigator, "userAgent", "get").mockReturnValue("Mozilla/5.0 (iPhone)");
+    await userEvent.click(await generateForLine());
+    expect(String(open.mock.calls[0]![0]).startsWith("https://line.me/R/oaMessage/")).toBe(true);
+    expect(open.mock.calls[0]![1]).toBe("_blank");
+    open.mockRestore();
+    ua.mockRestore();
+  });
+
   it("remembers reporter fields (not details) only when ticked", async () => {
     setup();
     await fillReporter();

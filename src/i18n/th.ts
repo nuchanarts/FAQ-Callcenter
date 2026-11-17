@@ -2,6 +2,11 @@
  * Centralized Thai UI strings (Constitution IV, X).
  * Every user-facing string lives here — components must not inline literals.
  */
+/** Joins words so the browser never breaks a line between them (Thai has no spaces). */
+const WORD_JOINER = "\u2060";
+const NO_BREAK_SPACE = "\u00a0";
+const nb = (...words: string[]) => words.join(WORD_JOINER).replaceAll(" ", NO_BREAK_SPACE);
+
 export const th = {
   app: {
     name: "ศูนย์ช่วยเหลือ ระบบคลาวด์กลาง",
@@ -14,6 +19,7 @@ export const th = {
     home: "หน้าหลัก",
     report: "แจ้งปัญหา",
     guide: "วิธีใช้งาน",
+    manuals: "คู่มือ & วิดีโอ",
     admin: "จัดการเนื้อหา",
     signOut: "ออกจากระบบ",
     skipToContent: "ข้ามไปยังเนื้อหาหลัก",
@@ -25,20 +31,58 @@ export const th = {
     steps: [
       {
         title: "ล้างแคชเบราว์เซอร์",
-        body: "กด Ctrl + Shift + Delete เลือก “รูปภาพและไฟล์ที่แคชไว้” แล้วกดล้างข้อมูล จากนั้นปิดแล้วเปิดเบราว์เซอร์ใหม่",
+        link: undefined,
+        body: `กด Ctrl + Shift + Delete เลือก “รูปภาพและไฟล์ที่แคชไว้” แล้วกดล้างข้อมูล ${nb("จาก", "นั้น")}ปิดแล้วเปิดเบราว์เซอร์ใหม่`,
       },
       {
         title: "ตรวจ EHP Agent",
+        link: undefined,
         body: "ดูไอคอน EHP Agent มุมขวาล่างของจอ ต้องเป็นสีเขียว ถ้าไม่มีหรือเป็นสีแดง ให้เปิดโปรแกรม EHP Agent ใหม่",
       },
       {
         title: "เข้าผ่าน SSO",
-        body: "ออกจากระบบ แล้วเข้าใหม่ผ่านปุ่ม “เข้าสู่ระบบด้วย SSO” เท่านั้น ไม่ใช้ลิงก์ที่บันทึกไว้เก่า",
+        body: "ออกแล้วเข้าใหม่ที่",
+        /** Rendered as a link right after `body`, followed by `after`. */
+        link: { href: "https://sso.moph.go.th/", label: "sso.moph.go.th" },
+        after: "เท่านั้น ห้ามใช้ลิงก์เก่า",
       },
     ],
   },
+  manuals: {
+    title: "คู่มือการใช้งานระบบแพลตฟอร์มกลาง รพ.สต.",
+    subtitle: "ประกาศล่าสุด · Datacheck 12 เขตสุขภาพ · คู่มือ One Page · วิดีโอสอนใช้งาน",
+    searchLabel: "ค้นหาคู่มือและวิดีโอ",
+    searchPlaceholder: "ค้นหาคู่มือ วิดีโอ หรือ Datacheck เช่น สั่งยา, E-Claim, สิทธิ, 13 แฟ้ม, ชื่อจังหวัด…",
+    filterLabel: "เลือกหมวด",
+    all: "ทั้งหมด",
+    stats: (onepage: number, videos: number, regions: number) =>
+      `${onepage} คู่มือ One Page · ${videos} วิดีโอ · Datacheck ${regions} เขตสุขภาพ`,
+    newsTitle: "ประกาศ / อัปเดตล่าสุด",
+    datacheckTitle: "Datacheck — ตรวจข้อมูลก่อนส่ง 13 แฟ้มพลัส",
+    datacheckLead:
+      "เลือกเขตสุขภาพตามจังหวัดที่ตั้งของ รพ.สต. → กด “เข้าสู่ระบบด้วย MOPH SSO” → ตรวจและแก้ข้อมูลที่ยังไม่ครบ แล้วจึงส่งออก",
+    region: (n: number) => `เขตสุขภาพที่ ${n}`,
+    regionShort: (n: number) => `เขต ${n}`,
+    openDatacheck: "เข้าสู่ระบบ Datacheck",
+    onepageTitle: "คู่มือการใช้งานแบบ One Page",
+    onepageOpen: "เปิดดูภาพ",
+    videosTitle: "วิดีโอสอนใช้งาน",
+    watch: "ดูวิดีโอ",
+    linksTitle: "ลิงก์ที่เกี่ยวข้อง",
+    items: (n: number) => `${n} รายการ`,
+    empty: "ไม่พบคู่มือหรือวิดีโอที่ตรงกับคำค้น",
+    emptyBody: "ลองใช้คำสั้นลง หรือเลือก “ทั้งหมด”",
+    clear: "ล้างคำค้น",
+    opensNewTab: "(เปิดในแท็บใหม่)",
+    readMore: "อ่านต่อในหน้าคู่มือ",
+  },
+  skin: {
+    label: "เลือกโทนสี",
+  },
   search: {
     label: "ค้นหาปัญหา",
+    prompt: "เริ่มตรงนี้ — พิมพ์ปัญหาที่เจอ แล้วคำตอบจะขึ้นทันที",
+    submit: "ค้นหา",
     placeholder: "พิมพ์สิ่งที่เห็นบนหน้าจอ เช่น ออเทนไม่ได้, ปริ้นสติ๊กเกอร์",
     clear: "ล้างคำค้น",
     shortcutHint: "กด / เพื่อค้นหา",
@@ -76,7 +120,8 @@ export const th = {
   report: {
     title: "แจ้งปัญหาถึงทีม Call Center",
     subtitle: "กรอกข้อมูลให้ครบ ระบบจะสร้างข้อความตามรูปแบบมาตรฐานให้คัดลอกไปส่งได้ทันที",
-    privacy: "ข้อมูลนี้ไม่ถูกส่งขึ้นเซิร์ฟเวอร์ ห้ามใส่ข้อมูลผู้ป่วย (ชื่อ, HN, เลขบัตรประชาชน)",
+    privacy:
+      "เมื่อกดคัดลอกหรือส่งทาง LINE ระบบจะบันทึกเรื่องนี้ไว้ให้ทีมติดตามงาน — ห้ามใส่ข้อมูลผู้ป่วย (ชื่อ, HN, เลขบัตรประชาชน)",
     reporterSection: "ข้อมูลผู้แจ้ง",
     problemSection: "เล่าปัญหาที่พบ",
     fields: {
@@ -106,6 +151,16 @@ export const th = {
     copy: "คัดลอกข้อความ",
     topicPrefix: "[หัวข้อ]",
     fixErrors: "กรุณาตรวจสอบช่องที่มีเครื่องหมายแจ้งเตือน",
+    greeting: "ไม่ต้องกังวล ทีมของเราพร้อมช่วยคุณ",
+    flow: ["กรอกข้อมูล", "คัดลอกข้อความ", "ส่งทาง LINE"],
+    reporterLead: "ให้ทีมรู้ว่าจะติดต่อกลับใคร ที่ไหน",
+    problemLead: "เล่าแบบที่เห็นบนจอได้เลย ยิ่งละเอียด ยิ่งแก้ได้เร็ว",
+    sla: {
+      badge: "ตอบกลับภายใน 24 ชม.",
+      title: `ทีม Call Center ตอบกลับภายใน 24 ชั่วโมง ${nb("(วัน", "ทำการ)")}`,
+      body: `เมื่อส่งข้อความแล้ว ถือว่าทีมได้รับเรื่องแล้ว ทีมจะติดต่อกลับให้เร็วที่สุด ${nb("ไม่เกิน", " 24", " ชั่วโมง", "ใน", "วัน", "ทำการ")}`,
+      afterCopy: `ส่งแล้วไม่ต้องกังวล — ทีมได้รับเรื่องแล้ว และจะตอบกลับให้เร็วที่สุด ${nb("ไม่เกิน", " 24", " ชั่วโมง", "ใน", "วัน", "ทำการ")}`,
+    },
   },
   validation: {
     required: "กรุณากรอกช่องนี้",
@@ -118,6 +173,19 @@ export const th = {
     tooMany: (max: number) => `ใส่ได้ไม่เกิน ${max} รายการ`,
     category: "กรุณาเลือกหมวด",
     level: "กรุณาเลือกระดับ",
+  },
+  line: {
+    openChat: "เปิด LINE พร้อมข้อความ",
+    stepsTitle: "เปิด LINE พร้อมข้อความแล้ว ✓",
+    steps: (id: string) => [
+      `ดูที่หน้าต่าง LINE แชท MOPH Call Center (${id}) — ข้อความอยู่ในช่องพิมพ์แล้ว`,
+      "กดรูปคลิปหนีบ 📎 แนบรูปหน้าจอที่เจอ",
+      "กดส่ง (Enter) — เสร็จแล้ว!",
+    ],
+    emptyBox: "ช่องพิมพ์ว่าง? คลิกช่องพิมพ์ แล้วกด Ctrl + V (คัดลอกไว้ให้แล้ว)",
+    noChat: "ยังไม่มีแชทนี้?",
+    addFriend: (id: string) => `เพิ่มเพื่อนจาก LINE บนมือถือ ค้นหา ID ${id}`,
+    addFriendLink: "หรือกดเพิ่มเพื่อนที่นี่",
   },
   copy: {
     copied: "คัดลอกแล้ว",
@@ -220,6 +288,7 @@ export const th = {
   guide: {
     title: "วิธีใช้งาน",
     subtitle: "เริ่มใช้งานได้ใน 1 นาที",
+    openFull: "เปิดหน้าวิธีใช้งานเต็ม",
     viewerTitle: "สำหรับเจ้าหน้าที่ รพ.สต.",
     adminTitle: "สำหรับผู้ดูแลเนื้อหา",
     viewerSteps: [
@@ -241,7 +310,7 @@ export const th = {
       },
       {
         title: "ยังไม่ได้? แจ้งทีมด้วยข้อมูลครบ",
-        body: "กด “ยังไม่ได้ — แจ้งทีม” กรอกแบบฟอร์ม แล้วกด “คัดลอกข้อความ” นำไปวางในช่องทางติดต่อทีม Call Center",
+        body: "กด “ยังไม่ได้ — แจ้งทีม” กรอกแบบฟอร์ม แล้วกด “เปิด LINE พร้อมข้อความ” แนบรูปหน้าจอ แล้วกดส่ง",
       },
     ],
     adminSteps: [

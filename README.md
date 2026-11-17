@@ -79,6 +79,33 @@ See [`.env.example`](.env.example).
 | `SESSION_SECRET`                                        | dev value         | **Required in production**, ≥ 32 random characters; example values are rejected |
 | `ALLOW_DEMO_ADMINS`                                     | off in production | Seeds the demo admins (E2E only)                                                |
 | `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | —                 | Required for `supabase`                                                         |
+| `SHEET_WEBHOOK_URL`, `SHEET_WEBHOOK_SECRET`             | — (logging off)   | Google Sheet log of reports + topic views, see below                            |
+| `MANUALS_SHEET_ID`                                      | — (built-in copy) | Google Sheet with the "คู่มือ" page content, see below                             |
+
+## Manual library ("คู่มือ & วิดีโอ" page)
+
+Content is edited in a Google Sheet (tabs `news`, `datacheck`, `onepage`, `videos`, `links`;
+the `วิธีแก้ไข` tab explains every column in Thai). The site reads it through Google's CSV
+endpoint, so the Sheet must be shared **"Anyone with the link: Viewer"**; changes appear within
+~5 minutes (in-memory cache). Set `MANUALS_SHEET_ID` to the Sheet id. If the Sheet is unset,
+private or down, each tab falls back to the built-in copy in `src/content/base-manuals.ts`.
+Rules: `show` blank = visible, `ไม่`/`no` = hidden; links must be `https://`; don't rename tabs
+or header cells.
+
+## Google Sheet log (reports + topic views)
+
+When a caller copies a finished report (or opens LINE), the report is appended to the
+`reports` tab; each topic a viewer opens on the home page is appended to the `views` tab
+(once per topic per visit). Count views with a pivot table on the `หัวข้อ` column.
+
+1. Open the Sheet → Extensions → Apps Script, paste
+   [`scripts/google-sheet-webhook.gs`](scripts/google-sheet-webhook.gs).
+2. Project Settings → Script properties → `SECRET` = a long random string.
+3. Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone).
+4. Set `SHEET_WEBHOOK_URL` (the web app URL) and `SHEET_WEBHOOK_SECRET` (same string), restart.
+
+The browser only talks to `/api/log`; the secret stays on the server. Logging is
+best-effort: if the Sheet is down or unconfigured the app keeps working.
 
 ## Production (Supabase)
 
