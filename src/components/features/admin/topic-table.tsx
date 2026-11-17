@@ -13,7 +13,7 @@ import { searchTopics } from "@/domain/search";
 import type { EffectiveTopic, TopicStatus } from "@/domain/topics";
 import { th } from "@/i18n/th";
 
-type StatusFilter = "all" | TopicStatus | "hidden" | "pending" | "rejected";
+type StatusFilter = "all" | TopicStatus | "hidden" | "pending" | "rejected" | "deleted";
 
 const t = th.admin;
 const STATUS_TONE = { original: "neutral", edited: "partial", custom: "herb" } as const;
@@ -25,6 +25,9 @@ const dateFormat = new Intl.DateTimeFormat("th-TH", {
 });
 
 function matchesStatus(topic: EffectiveTopic, status: StatusFilter): boolean {
+  // Deleted built-ins only appear under their own filter.
+  if (status === "deleted") return topic.deleted;
+  if (topic.deleted) return false;
   if (status === "all") return true;
   if (status === "hidden") return topic.hidden;
   if (status === "pending" || status === "rejected") return topic.draft?.status === status;
@@ -87,6 +90,7 @@ export function TopicTable({
           <option value="edited">{t.status.edited}</option>
           <option value="custom">{t.status.custom}</option>
           <option value="hidden">{t.status.hidden}</option>
+          <option value="deleted">{t.status.deleted}</option>
         </Select>
       </div>
 
@@ -136,6 +140,7 @@ export function TopicTable({
                       <Badge tone={STATUS_TONE[topic.status]}>{t.status[topic.status]}</Badge>
                       {topic.hidden && <Badge tone="danger">{t.status.hidden}</Badge>}
                       {!topic.published && <Badge tone="neutral">{t.status.unpublished}</Badge>}
+                      {topic.deleted && <Badge tone="danger">{t.status.deleted}</Badge>}
                       {topic.draft?.status === "pending" && (
                         <Badge tone="partial">{t.status.pending}</Badge>
                       )}

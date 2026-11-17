@@ -7,7 +7,6 @@ import type { SessionUser } from "@/auth/session";
 import {
   ConflictError,
   ForbiddenError,
-  NotDeletableError,
   NotFoundError,
   UnauthorizedError,
   ValidationError,
@@ -107,10 +106,13 @@ describe("built-in topics: override, hide, restore (Constitution VI)", () => {
     expect(t).toMatchObject({ hidden: true, status: "original", version: 1 });
   });
 
-  it("refuses to delete built-in topics", async () => {
-    await expect(svc.deleteTopic(admin, { id: "b-1", expectedVersion: 0 })).rejects.toBeInstanceOf(
-      NotDeletableError,
-    );
+  it("soft-deletes built-in topics (gone for viewers, restorable by approvers)", async () => {
+    expect(await svc.deleteTopic(admin, { id: "b-1", expectedVersion: 0 })).toEqual({ id: "b-1" });
+    expect((await svc.getPublicTopics()).topics.map((t) => t.id)).not.toContain("b-1");
+    expect((await svc.getForAdmin(admin, "b-1")).deleted).toBe(true);
+    const back = await svc.undeleteTopic(admin, { id: "b-1", expectedVersion: 1 });
+    expect(back.deleted).toBe(false);
+    expect((await svc.getPublicTopics()).topics.map((t) => t.id)).toContain("b-1");
   });
 
   it("restoring a never-edited topic is a harmless no-op", async () => {

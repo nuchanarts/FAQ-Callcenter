@@ -11,6 +11,7 @@ function topic(p: Partial<EffectiveTopic> & { id: string }): EffectiveTopic {
     version: 0,
     published: true,
     draft: null,
+    deleted: false,
     title: "",
     categoryId: "login",
     level: "self",

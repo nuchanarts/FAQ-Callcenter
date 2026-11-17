@@ -28,6 +28,7 @@ interface TopicRow {
   created_at: string;
   updated_at: string;
   updated_by: string;
+  deleted?: string;
 }
 
 interface AdminRow {
@@ -60,6 +61,7 @@ export const toStored = (r: TopicRow): StoredTopic => ({
   updatedAt: r.updated_at,
   updatedBy: r.updated_by,
   draft: parseJson(r.draft_json),
+  deleted: r.deleted === "true",
 });
 
 export const toTopicRow = (t: StoredTopic): TopicRow => ({
@@ -72,6 +74,7 @@ export const toTopicRow = (t: StoredTopic): TopicRow => ({
   created_at: t.createdAt,
   updated_at: t.updatedAt,
   updated_by: t.updatedBy,
+  deleted: String(t.deleted ?? false),
 });
 
 const toAdmin = (r: AdminRow): AdminUserRecord => ({

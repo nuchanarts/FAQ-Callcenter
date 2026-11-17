@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { SessionUser } from "@/auth/session";
-import { ConflictError, NotDeletableError, NotFoundError, ValidationError } from "@/domain/errors";
+import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors";
 import { assertAdmin, assertCanPublish, canPublish } from "@/domain/permissions";
 import { parseTopicContent, type TopicContent } from "@/domain/topic";
 import {
@@ -78,7 +78,12 @@ export function createTopicService(deps: TopicServiceDeps) {
     actor: SessionUser,
     id: string,
     expectedVersion: number,
-    patch: { content?: TopicContent | null; hidden?: boolean; draft?: TopicDraft | null },
+    patch: {
+      content?: TopicContent | null;
+      hidden?: boolean;
+      draft?: TopicDraft | null;
+      deleted?: boolean;
+    },
   ): Promise<EffectiveTopic> {
     const stored = await readStored();
     const current = find(stored, id);
@@ -91,6 +96,7 @@ export function createTopicService(deps: TopicServiceDeps) {
         content: patch.content !== undefined ? patch.content : (existing?.content ?? null),
         hidden: patch.hidden ?? existing?.hidden ?? false,
         draft: patch.draft !== undefined ? patch.draft : (existing?.draft ?? null),
+        deleted: patch.deleted ?? existing?.deleted ?? false,
         version: expectedVersion + 1,
         createdAt: existing?.createdAt ?? stamp,
         updatedAt: stamp,
@@ -256,8 +262,12 @@ export function createTopicService(deps: TopicServiceDeps) {
     actor: Actor,
     input: { id: string; expectedVersion: number },
   ): Promise<{ id: string }> {
-    assertCanPublish(actor);
-    if (baseIds.has(input.id)) throw new NotDeletableError();
+    const user = assertCanPublish(actor);
+    // Built-in topics are soft-deleted (restorable); custom topics are removed for good.
+    if (baseIds.has(input.id)) {
+      await write(user, input.id, input.expectedVersion, { deleted: true, draft: null });
+      return { id: input.id };
+    }
     const existing = await deps.topics.get(input.id);
     if (!existing) throw new NotFoundError("topic");
     // Never delete content someone changed after this admin loaded it.
@@ -266,7 +276,18 @@ export function createTopicService(deps: TopicServiceDeps) {
     return { id: input.id };
   }
 
+  /** Bring back a deleted built-in topic. */
+  async function undeleteTopic(
+    actor: Actor,
+    input: { id: string; expectedVersion: number },
+  ): Promise<EffectiveTopic> {
+    const user = assertCanPublish(actor);
+    if (!baseIds.has(input.id)) throw new NotFoundError("topic");
+    return write(user, input.id, input.expectedVersion, { deleted: false });
+  }
+
   return {
+    undeleteTopic,
     getPublicTopics,
     findPublicTopic,
     listForAdmin,

@@ -30,6 +30,7 @@ function topic(p: Partial<EffectiveTopic> & { id: string; title: string }): Effe
     version: 0,
     published: true,
     draft: null,
+    deleted: false,
     categoryId: "login",
     level: "self",
     keywords: [],
@@ -151,11 +152,11 @@ describe("TopicTable", () => {
     expect(screen.getAllByRole("row")).toHaveLength(2);
   });
 
-  it("offers restore only for edited built-ins and delete only for custom topics", () => {
+  it("offers restore only for edited built-ins and delete for every published topic", () => {
     wrap(<TopicTable canPublish topics={topics} />);
     const rows = screen.getAllByRole("row").slice(1);
     expect(within(rows[0]!).queryByRole("button", { name: /คืนค่าเดิม/ })).toBeNull();
-    expect(within(rows[0]!).queryByRole("button", { name: /ลบ/ })).toBeNull();
+    expect(within(rows[0]!).getByRole("button", { name: /^ลบ/ })).toBeInTheDocument();
     expect(within(rows[1]!).getByRole("button", { name: /คืนค่าเดิม/ })).toBeInTheDocument();
     expect(within(rows[2]!).getByRole("button", { name: /ลบ/ })).toBeInTheDocument();
     expect(within(rows[2]!).getByRole("button", { name: /แสดง/ })).toBeInTheDocument();

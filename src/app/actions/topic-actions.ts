@@ -85,3 +85,9 @@ export async function discardDraftAction(input: {
     topicService().discardDraft(await getAdmin(), parseOrThrow(versioned, input)),
   );
 }
+
+export async function undeleteTopicAction(input: { id: string; expectedVersion: number }): Result {
+  return runAction(async () =>
+    topicService().undeleteTopic(await getAdmin(), parseOrThrow(versioned, input)),
+  );
+}

@@ -97,7 +97,7 @@ describe("topic server actions", () => {
     });
   });
 
-  it("return field errors, conflict and not_deletable codes", async () => {
+  it("return field errors and conflict codes; built-ins are soft-deleted", async () => {
     await signInAsAdmin();
     const invalid = await actions.createTopicAction({
       ...content,
@@ -118,11 +118,9 @@ describe("topic server actions", () => {
       ok: false,
       error: { code: "conflict", message: "มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่" },
     });
-    expect(
-      await actions.deleteTopicAction({ id: "b-login-blank", expectedVersion: 0 }),
-    ).toMatchObject({
-      ok: false,
-      error: { code: "not_deletable" },
+    expect(await actions.deleteTopicAction({ id: "b-login-blank", expectedVersion: 1 })).toEqual({
+      ok: true,
+      data: { id: "b-login-blank" },
     });
   });
 

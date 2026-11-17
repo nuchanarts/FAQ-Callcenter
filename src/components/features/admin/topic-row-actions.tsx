@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Eye, EyeOff, Pencil, RotateCcw, Trash2 } from "lucide-react";
+import { ArchiveRestore, Eye, EyeOff, Pencil, RotateCcw, Trash2 } from "lucide-react";
 import {
   deleteTopicAction,
   restoreTopicAction,
   setTopicHiddenAction,
+  undeleteTopicAction,
 } from "@/app/actions/topic-actions";
 import { Button, buttonClass } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -54,6 +55,12 @@ export function TopicRowActions({
     close();
   };
 
+  const undelete = () =>
+    run(
+      () => undeleteTopicAction({ id: topic.id, expectedVersion: topic.version }),
+      th.admin.undeleted,
+    );
+
   const remove = async () => {
     await run(
       () => deleteTopicAction({ id: topic.id, expectedVersion: topic.version }),
@@ -61,6 +68,23 @@ export function TopicRowActions({
     );
     close();
   };
+
+  const isBase = topic.origin === "base";
+
+  if (topic.deleted) {
+    return canPublish ? (
+      <Button
+        variant="secondary"
+        size="sm"
+        pending={pending}
+        aria-label={label(a.undelete)}
+        onClick={undelete}
+      >
+        <ArchiveRestore aria-hidden className="size-4" />
+        {a.undelete}
+      </Button>
+    ) : null;
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-1">
@@ -99,7 +123,7 @@ export function TopicRowActions({
           {a.restore}
         </Button>
       )}
-      {canPublish && topic.origin === "custom" && topic.published && (
+      {canPublish && topic.published && (
         <Button
           variant="quiet-danger"
           size="sm"
@@ -123,14 +147,15 @@ export function TopicRowActions({
       <ConfirmDialog
         open={dialog === "delete"}
         title={c.deleteTitle}
-        body={c.deleteBody}
+        body={isBase ? c.deleteBaseBody : c.deleteBody}
         confirmLabel={a.delete}
         tone="danger"
-        onConfirm={() => setDialog("delete-final")}
+        pending={pending && isBase}
+        onConfirm={isBase ? remove : () => setDialog("delete-final")}
         onCancel={close}
       />
       <ConfirmDialog
-        open={dialog === "delete-final"}
+        open={dialog === "delete-final" && !isBase}
         title={c.deleteFinalTitle}
         body={c.deleteFinalBody}
         confirmLabel={c.deleteFinal}

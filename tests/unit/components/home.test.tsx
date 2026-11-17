@@ -16,6 +16,7 @@ function topic(p: Partial<EffectiveTopic> & { id: string; title: string }): Effe
     version: 0,
     published: true,
     draft: null,
+    deleted: false,
     categoryId: "login",
     level: "self",
     keywords: [],

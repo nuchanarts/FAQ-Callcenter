@@ -57,6 +57,7 @@ var DATA_TABS = {
       "created_at",
       "updated_at",
       "updated_by",
+      "deleted",
     ],
   },
   settings: {

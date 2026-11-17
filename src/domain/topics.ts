@@ -33,6 +33,8 @@ export interface StoredTopic {
   updatedBy: string;
   /** Pending/rejected change from an author; absent/null = none. */
   draft?: TopicDraft | null;
+  /** Built-in topic removed by an approver (kept so it can be restored from "ลบแล้ว"). */
+  deleted?: boolean;
 }
 
 /** The topic as viewers and admins see it after merging. version 0 = never stored. */
@@ -48,6 +50,8 @@ export interface EffectiveTopic extends TopicContent {
   /** false = a new topic that exists only as a draft (never shown to viewers). */
   published: boolean;
   draft: TopicDraft | null;
+  /** Deleted built-in topic (listed only under the admin "ลบแล้ว" filter). */
+  deleted: boolean;
 }
 
 const CUSTOM_ORDER_OFFSET = 100_000;
@@ -66,6 +70,7 @@ function fromBase(b: BaseTopic, s: StoredTopic | undefined): EffectiveTopic {
     updatedBy: s?.updatedBy,
     published: true,
     draft: s?.draft ?? null,
+    deleted: s?.deleted ?? false,
   };
 }
 
@@ -84,6 +89,7 @@ function fromCustom(s: StoredTopic, index: number): EffectiveTopic {
     updatedBy: s.updatedBy,
     published: s.content !== null,
     draft: s.draft ?? null,
+    deleted: false,
   };
 }
 
@@ -105,5 +111,5 @@ export function mergeTopics(base: BaseTopic[], stored: StoredTopic[]): Effective
 
 /** What viewers may see: published and not hidden (drafts never leak). */
 export function visibleTopics(topics: EffectiveTopic[]): EffectiveTopic[] {
-  return topics.filter((t) => !t.hidden && t.published);
+  return topics.filter((t) => !t.hidden && t.published && !t.deleted);
 }
