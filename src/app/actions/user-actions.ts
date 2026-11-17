@@ -21,7 +21,6 @@ export async function createUserAction(input: {
   email: string;
   displayName: string;
   role: string;
-  password: string;
 }): Result {
   return done(async () => userService().createUser(await getAdmin(), input));
 }
@@ -33,8 +32,4 @@ export async function updateUserAction(input: {
   active?: boolean;
 }): Result {
   return done(async () => userService().updateUser(await getAdmin(), input));
-}
-
-export async function resetPasswordAction(input: { id: string; password: string }): Result {
-  return done(async () => userService().resetPassword(await getAdmin(), input));
 }

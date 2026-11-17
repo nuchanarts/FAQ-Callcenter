@@ -31,10 +31,13 @@ export async function SiteHeader() {
             <Link
               href="/login"
               title={th.nav.staffLogin}
-              className="flex h-10 items-center gap-1.5 rounded-soft px-2.5 text-[0.95rem] font-semibold text-ink-muted hover:bg-surface-muted hover:text-ink"
+              className="group flex h-10 items-center gap-0 rounded-soft px-2.5 text-[0.95rem] font-semibold text-ink-muted transition-[gap] hover:gap-1.5 hover:bg-surface-muted hover:text-ink focus-visible:gap-1.5"
             >
               <LockKeyhole aria-hidden className="size-[1.1rem]" />
-              <span className="max-lg:sr-only">{th.nav.staffLoginShort}</span>
+              {/* Icon only; the label slides out on hover / keyboard focus (always read by screen readers). */}
+              <span className="max-w-0 overflow-hidden whitespace-nowrap opacity-0 transition-[max-width,opacity] duration-300 ease-out group-hover:max-w-40 group-hover:opacity-100 group-focus-visible:max-w-40 group-focus-visible:opacity-100">
+                {th.nav.staffLoginShort}
+              </span>
             </Link>
           )}
           {admin && (

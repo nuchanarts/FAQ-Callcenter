@@ -92,6 +92,13 @@ private or down, each tab falls back to the built-in copy in `src/content/base-m
 Rules: `show` blank = visible, `ไม่`/`no` = hidden; links must be `https://`; don't rename tabs
 or header cells.
 
+## Staff sign-in (Google only)
+
+Staff sign in with **Sign in with Google**. The server verifies Google's ID token (signature,
+audience = `GOOGLE_CLIENT_ID`, verified email) and allows only Gmail addresses an owner added
+and kept active at `/admin/users`; everyone else is refused. No passwords are stored. Email +
+password login exists only for local development and E2E (`ALLOW_DEMO_ADMINS`).
+
 ## Roles and FAQ approval
 
 | Role             | Can do                                                                       |
@@ -109,7 +116,7 @@ FAQ topics (tab `faq_topics`) and admin accounts (tab `admin_users`) live in the
 Sheet as the logs, read and written only through the Apps Script with the shared secret, so the
 Sheet must be shared **Restricted**. Reads are cached per server instance (topics 20 s, admins
 60 s). Create the first owner with
-`npm run create-owner -- <email> "<name>" "<password 12+ chars>"`, then add others in the app.
+`npm run create-owner -- <gmail> "<name>"`, then add others in the app.
 Never edit `admin_users` by hand.
 
 ## Google Sheet log (reports + topic views)

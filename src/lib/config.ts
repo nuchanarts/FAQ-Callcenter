@@ -12,6 +12,10 @@ export interface AppConfig {
   sessionSecret: string;
   dataFile: string;
   allowDemoAdmins: boolean;
+  /** Google OAuth client id for "Sign in with Google" (staff login). Not a secret. */
+  googleClientId: string;
+  /** Email + password login: only for local development and E2E (demo admins). */
+  passwordLogin: boolean;
   supabase?: { url: string; serviceRoleKey: string };
   sheets?: { url: string; secret: string };
 }
@@ -45,6 +49,8 @@ export function readConfig(env: Env = process.env): AppConfig {
     sessionSecret,
     dataFile: env.DATA_FILE ?? ".data/db.json",
     allowDemoAdmins: !isProduction || env.ALLOW_DEMO_ADMINS === "true",
+    googleClientId: env.GOOGLE_CLIENT_ID?.trim() ?? "",
+    passwordLogin: !isProduction || env.ALLOW_DEMO_ADMINS === "true",
   };
   if (backend === "supabase") {
     const url = env.NEXT_PUBLIC_SUPABASE_URL;

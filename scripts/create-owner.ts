@@ -1,13 +1,12 @@
 /**
- * Create (or reset) the first owner account in the Google Sheet backend (DATA_BACKEND=sheets),
- * so someone can sign in and add everyone else from /admin/users.
+ * Grant the first owner (a Gmail address) in the Google Sheet backend (DATA_BACKEND=sheets),
+ * so they can "Sign in with Google" and add everyone else from /admin/users.
  *
  * Usage (reads SHEET_WEBHOOK_URL / SHEET_WEBHOOK_SECRET from .env.local):
- *   npm run create-owner -- <email> "<display name>" "<password, 12+ characters>"
+ *   npm run create-owner -- <gmail> "<display name>"
  */
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { hashPassword } from "../src/auth/password.ts";
 
 function env(name: string): string {
   if (process.env[name]) return process.env[name]!;
@@ -22,11 +21,9 @@ function env(name: string): string {
   return "";
 }
 
-const [email, displayName, password] = process.argv.slice(2);
-if (!email || !displayName || !password || password.length < 12) {
-  console.error(
-    'Usage: npm run create-owner -- <email> "<display name>" "<password of 12+ characters>"',
-  );
+const [email, displayName] = process.argv.slice(2);
+if (!email || !email.includes("@") || !displayName) {
+  console.error('Usage: npm run create-owner -- <gmail> "<display name>"');
   process.exit(1);
 }
 const url = env("SHEET_WEBHOOK_URL");
@@ -58,8 +55,8 @@ await call("admins.upsert", {
     email: key,
     display_name: displayName,
     role: "owner",
-    password_hash: await hashPassword(password),
+    password_hash: "",
     active: "true",
   },
 });
-console.log(`${existing ? "Updated" : "Created"} owner ${key}. Sign in at /login.`);
+console.log(`${existing ? "Updated" : "Granted"} owner ${key}. Sign in with Google at /login.`);

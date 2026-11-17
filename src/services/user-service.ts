@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { hashPassword } from "@/auth/password";
 import type { SessionUser } from "@/auth/session";
 import { ConflictError, NotFoundError, ValidationError } from "@/domain/errors";
 import { ADMIN_ROLES, assertCanManageUsers, type AdminRole } from "@/domain/permissions";
@@ -17,28 +16,26 @@ export interface AdminUserView {
   active: boolean;
 }
 
-export const PASSWORD_MIN = 10;
-
 const v = th.validation;
 const u = th.users;
 
 const email = z.string().trim().toLowerCase().min(1, v.required).max(200).email(v.email);
 const displayName = z.string().trim().min(1, v.required).max(80, v.tooLong(80));
 const role = z.enum(ADMIN_ROLES);
-const password = z.string().min(PASSWORD_MIN, u.passwordTooShort).max(200, v.tooLong(200));
-
-const createSchema = z.object({ email, displayName, role, password });
+const createSchema = z.object({ email, displayName, role });
 const updateSchema = z.object({
   id: z.string().min(1).max(100),
   displayName: displayName.optional(),
   role: role.optional(),
   active: z.boolean().optional(),
 });
-const resetSchema = z.object({ id: z.string().min(1).max(100), password });
 
 const toView = ({ passwordHash: _hash, ...rest }: AdminUserRecord): AdminUserView => rest;
 
-/** Admin account management (owner only, Constitution VI). */
+/**
+ * Admin account management (owner only, Constitution VI). Staff sign in with Google, so an
+ * account is just a granted Gmail address + name + role; no password is stored.
+ */
 export function createUserService(deps: { admins: AdminUserRepository; newId?: () => string }) {
   const newId = deps.newId ?? (() => `u-${randomUUID()}`);
 
@@ -74,7 +71,7 @@ export function createUserService(deps: { admins: AdminUserRepository; newId?: (
       email: data.email,
       displayName: data.displayName,
       role: data.role,
-      passwordHash: await hashPassword(data.password),
+      passwordHash: "",
       active: true,
     });
   }
@@ -100,14 +97,7 @@ export function createUserService(deps: { admins: AdminUserRepository; newId?: (
     return save(next);
   }
 
-  async function resetPassword(actor: SessionUser | null, input: unknown): Promise<AdminUserView> {
-    assertCanManageUsers(actor);
-    const data = parseOrThrow(resetSchema, input);
-    const { user } = await load(data.id);
-    return save({ ...user, passwordHash: await hashPassword(data.password) });
-  }
-
-  return { listUsers, createUser, updateUser, resetPassword };
+  return { listUsers, createUser, updateUser };
 }
 
 export type UserService = ReturnType<typeof createUserService>;

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { verifyPassword } from "@/auth/password";
+import type { GoogleVerifier } from "@/auth/google";
 import type { SessionUser } from "@/auth/session";
 import { ValidationError } from "@/domain/errors";
 import { parseOrThrow } from "@/domain/validation";
@@ -21,7 +22,22 @@ export function safeNextPath(next: string | undefined | null): string {
   return next;
 }
 
-export function createAuthService(deps: { admins: AdminUserRepository }) {
+export function createAuthService(deps: {
+  admins: AdminUserRepository;
+  verifyGoogle?: GoogleVerifier;
+}) {
+  /**
+   * Staff sign-in with a Google account: allowed only when Google has verified the email
+   * AND that email is an active account in the admin list (granted by an owner).
+   */
+  async function signInWithGoogle(credential: string): Promise<SessionUser> {
+    const email = deps.verifyGoogle ? await deps.verifyGoogle(credential) : null;
+    if (!email) throw new ValidationError(th.auth.googleFailed);
+    const user = await deps.admins.findByEmail(email);
+    if (!user || !user.active) throw new ValidationError(th.auth.notAllowed(email));
+    return { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
+  }
+
   async function signIn(input: { email: string; password: string }): Promise<SessionUser> {
     const { email, password } = parseOrThrow(signInSchema, input);
     const user = await deps.admins.findByEmail(email);
@@ -30,7 +46,7 @@ export function createAuthService(deps: { admins: AdminUserRepository }) {
     if (!user || !valid || !user.active) throw new ValidationError(th.auth.invalid);
     return { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
   }
-  return { signIn };
+  return { signIn, signInWithGoogle };
 }
 
 const DUMMY_HASH = "scrypt$00000000000000000000000000000000$" + "0".repeat(128);

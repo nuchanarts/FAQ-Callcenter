@@ -1,12 +1,8 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { KeyRound, Power, UserPlus } from "lucide-react";
-import {
-  createUserAction,
-  resetPasswordAction,
-  updateUserAction,
-} from "@/app/actions/user-actions";
+import { Power, UserPlus } from "lucide-react";
+import { createUserAction, updateUserAction } from "@/app/actions/user-actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -27,7 +23,7 @@ export function UsersManager({ users, meId }: { users: AdminUserView[]; meId: st
           {u.count(users.length)}
         </p>
         <div className="overflow-x-auto rounded-soft border border-line bg-surface">
-          <table className="w-full min-w-[48rem] text-left">
+          <table className="w-full min-w-[36rem] text-left">
             <thead className="border-b border-line bg-surface-muted text-[0.95rem] text-ink-muted">
               <tr>
                 <th scope="col" className="px-4 py-3 font-semibold">
@@ -38,9 +34,6 @@ export function UsersManager({ users, meId }: { users: AdminUserView[]; meId: st
                 </th>
                 <th scope="col" className="px-4 py-3 font-semibold">
                   {u.status}
-                </th>
-                <th scope="col" className="px-4 py-3 font-semibold">
-                  {u.newPassword}
                 </th>
               </tr>
             </thead>
@@ -101,16 +94,11 @@ function RoleSelect({
 
 function UserRow({ user, isMe }: { user: AdminUserView; isMe: boolean }) {
   const { run, pending } = useActionFeedback();
-  const [password, setPassword] = useState("");
 
   const changeRole = (role: AdminRole) =>
     run(() => updateUserAction({ id: user.id, role }), u.updated);
   const toggleActive = () =>
     run(() => updateUserAction({ id: user.id, active: !user.active }), u.updated);
-  const reset = async () => {
-    const res = await run(() => resetPasswordAction({ id: user.id, password }), u.passwordReset);
-    if (res.ok) setPassword("");
-  };
 
   return (
     <tr className="border-b border-line align-top last:border-b-0">
@@ -141,28 +129,6 @@ function UserRow({ user, isMe }: { user: AdminUserView; isMe: boolean }) {
           )}
         </div>
       </td>
-      <td className="px-4 py-3">
-        <div className="flex gap-2">
-          <Input
-            type="password"
-            autoComplete="new-password"
-            aria-label={`${u.newPassword} ${user.displayName}`}
-            placeholder={u.newPassword}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          <Button
-            variant="secondary"
-            size="sm"
-            pending={pending}
-            disabled={password.length === 0}
-            onClick={reset}
-          >
-            <KeyRound aria-hidden className="size-4" />
-            {u.save}
-          </Button>
-        </div>
-      </td>
     </tr>
   );
 }
@@ -172,19 +138,14 @@ function AddUserForm() {
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [role, setRole] = useState<AdminRole>("author");
-  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<Record<string, string[]>>({});
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    const res = await run(
-      () => createUserAction({ email, displayName, role, password }),
-      u.created,
-    );
+    const res = await run(() => createUserAction({ email, displayName, role }), u.created);
     if (res.ok) {
       setEmail("");
       setDisplayName("");
-      setPassword("");
       setRole("author");
       setErrors({});
     } else {
@@ -203,7 +164,7 @@ function AddUserForm() {
         {u.add}
       </h2>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field label={u.email} error={errors.email?.[0]} required>
+        <Field label={u.email} hint={u.emailHint} error={errors.email?.[0]} required>
           {(p) => (
             <Input
               {...p}
@@ -221,17 +182,6 @@ function AddUserForm() {
         </Field>
         <Field label={u.role} required>
           {(p) => <RoleSelect id={p.id} value={role} onChange={setRole} />}
-        </Field>
-        <Field label={u.password} hint={u.passwordHint} error={errors.password?.[0]} required>
-          {(p) => (
-            <Input
-              {...p}
-              type="password"
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          )}
         </Field>
       </div>
       <Button type="submit" size="md" pending={pending} className="self-start">

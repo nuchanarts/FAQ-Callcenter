@@ -195,7 +195,8 @@ function ensureSheet(tab, plainText) {
     sheet.getRange(1, 1, 1, tab.headers.length).setFontWeight("bold").setBackground("#d6efe2");
     sheet.setFrozenRows(1);
     // Data tabs are plain text so ids, versions and JSON are stored exactly as sent.
-    if (plainText) sheet.getRange(1, 1, sheet.getMaxRows(), tab.headers.length).setNumberFormat("@");
+    if (plainText)
+      sheet.getRange(1, 1, sheet.getMaxRows(), tab.headers.length).setNumberFormat("@");
   }
   return sheet;
 }
