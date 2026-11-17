@@ -11,7 +11,12 @@ import type { Repositories } from "@/repositories/types";
 
 function build(): Repositories {
   const config = getConfig();
-  const admins = config.allowDemoAdmins ? demoAdminRecords() : [];
+  const admins = [
+    ...(config.allowDemoAdmins ? demoAdminRecords() : []),
+    ...(config.staffOwner
+      ? [{ id: "env-owner", role: "owner" as const, active: true, ...config.staffOwner }]
+      : []),
+  ];
   switch (config.backend) {
     case "memory":
       return createMemoryRepositories({ admins });

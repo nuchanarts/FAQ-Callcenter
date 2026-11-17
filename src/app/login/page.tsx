@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { next } = await searchParams;
   const nextPath = safeNextPath(typeof next === "string" ? next : undefined);
   if (await getAdmin()) redirect(nextPath);
-  const { googleClientId, passwordLogin } = getConfig();
+  const { googleClientId, passwordLogin, isProduction } = getConfig();
   return (
     <>
       <SiteHeader />
@@ -48,9 +48,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           )}
         </div>
         {passwordLogin && (
-          <details className="rounded-soft border border-dashed border-line-strong bg-surface p-4">
+          <details
+            open={isProduction}
+            className="rounded-soft border border-dashed border-line-strong bg-surface p-4"
+          >
             <summary className="cursor-pointer text-[0.95rem] font-semibold text-ink-muted">
-              {th.auth.devOnly}
+              {isProduction ? th.auth.passwordTemporary : th.auth.devOnly}
             </summary>
             <div className="mt-4">
               <LoginForm next={nextPath} />

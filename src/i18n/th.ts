@@ -230,6 +230,7 @@ export const th = {
     notAllowed: (email: string) => `บัญชี ${email} ยังไม่ได้รับสิทธิ์ — ติดต่อผู้ดูแลระบบเพื่อขอเพิ่มในรายชื่อเจ้าหน้าที่`,
     googleNotConfigured: "ยังไม่ได้ตั้งค่า Google Sign-In (GOOGLE_CLIENT_ID) — ติดต่อผู้ดูแลระบบ",
     devOnly: "สำหรับทดสอบในเครื่องเท่านั้น (ไม่แสดงบนเว็บจริง)",
+    passwordTemporary: "เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน (ชั่วคราว ก่อนเปิดใช้ Google)",
     signedInAs: (name: string) => `เข้าสู่ระบบในชื่อ ${name}`,
   },
   roles: {

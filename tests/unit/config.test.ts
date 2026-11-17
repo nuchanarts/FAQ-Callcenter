@@ -39,3 +39,30 @@ describe("config", () => {
     expect(() => readConfig({ DATA_BACKEND: "supabase" })).toThrow(/SUPABASE/);
   });
 });
+
+describe("temporary staff owner (before Google Sign-In)", () => {
+  const prod = {
+    NODE_ENV: "production",
+    DATA_BACKEND: "memory",
+    SESSION_SECRET: "x".repeat(40),
+  };
+  it("password login stays off in production unless explicitly enabled", () => {
+    expect(readConfig(prod).passwordLogin).toBe(false);
+    expect(readConfig({ ...prod, STAFF_PASSWORD_LOGIN: "true" }).passwordLogin).toBe(true);
+  });
+  it("reads one owner from env, requiring a real scrypt hash", () => {
+    const owner = readConfig({
+      ...prod,
+      STAFF_OWNER_EMAIL: " Owner@BGS-faq.local ",
+      STAFF_OWNER_PASSWORD_HASH: "scrypt$aa$bb",
+    }).staffOwner;
+    expect(owner).toEqual({
+      email: "owner@bgs-faq.local",
+      displayName: "ผู้ดูแลระบบ",
+      passwordHash: "scrypt$aa$bb",
+    });
+    expect(() =>
+      readConfig({ ...prod, STAFF_OWNER_EMAIL: "a@b.c", STAFF_OWNER_PASSWORD_HASH: "plain" }),
+    ).toThrow(/hash-password/);
+  });
+});

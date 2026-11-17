@@ -14,8 +14,10 @@ export interface AppConfig {
   allowDemoAdmins: boolean;
   /** Google OAuth client id for "Sign in with Google" (staff login). Not a secret. */
   googleClientId: string;
-  /** Email + password login: only for local development and E2E (demo admins). */
+  /** Email + password login: local development, E2E, or temporarily via STAFF_PASSWORD_LOGIN. */
   passwordLogin: boolean;
+  /** One owner account from env (STAFF_OWNER_*), e.g. to use the admin area before Google Sign-In. */
+  staffOwner?: { email: string; displayName: string; passwordHash: string };
   supabase?: { url: string; serviceRoleKey: string };
   sheets?: { url: string; secret: string };
 }
@@ -50,8 +52,21 @@ export function readConfig(env: Env = process.env): AppConfig {
     dataFile: env.DATA_FILE ?? ".data/db.json",
     allowDemoAdmins: !isProduction || env.ALLOW_DEMO_ADMINS === "true",
     googleClientId: env.GOOGLE_CLIENT_ID?.trim() ?? "",
-    passwordLogin: !isProduction || env.ALLOW_DEMO_ADMINS === "true",
+    passwordLogin:
+      !isProduction || env.ALLOW_DEMO_ADMINS === "true" || env.STAFF_PASSWORD_LOGIN === "true",
   };
+  const ownerEmail = env.STAFF_OWNER_EMAIL?.trim().toLowerCase();
+  const ownerHash = env.STAFF_OWNER_PASSWORD_HASH?.trim();
+  if (ownerEmail && ownerHash) {
+    if (!ownerHash.startsWith("scrypt$")) {
+      throw new Error("STAFF_OWNER_PASSWORD_HASH must come from npm run hash-password");
+    }
+    config.staffOwner = {
+      email: ownerEmail,
+      displayName: env.STAFF_OWNER_NAME?.trim() || "ผู้ดูแลระบบ",
+      passwordHash: ownerHash,
+    };
+  }
   if (backend === "supabase") {
     const url = env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY;
