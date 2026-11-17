@@ -8,6 +8,7 @@ describe("repository factory", () => {
     expect(repos.backend).toBe("memory");
     expect(getRepositories()).toBe(repos);
     expect(await repos.admins.findByEmail("admin@bgs.local")).toMatchObject({ role: "owner" });
-    expect(await repos.admins.findByEmail("editor@bgs.local")).toMatchObject({ role: "editor" });
+    expect(await repos.admins.findByEmail("editor@bgs.local")).toMatchObject({ role: "approver" });
+    expect(await repos.admins.findByEmail("author@bgs.local")).toMatchObject({ role: "author" });
   });
 });

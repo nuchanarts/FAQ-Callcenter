@@ -15,7 +15,7 @@ export async function getAdmin(): Promise<SessionUser | null> {
   if (!session) return null;
   try {
     const account = await getRepositories().admins.findByEmail(session.email);
-    if (!account || account.id !== session.id) return null;
+    if (!account || account.id !== session.id || !account.active) return null;
     return {
       id: account.id,
       email: account.email,

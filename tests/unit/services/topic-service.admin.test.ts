@@ -25,7 +25,7 @@ const base: BaseTopic[] = [
     attachments: [],
   },
 ];
-const admin: SessionUser = { id: "a1", email: "a@b.c", displayName: "ผู้ดูแล", role: "editor" };
+const admin: SessionUser = { id: "a1", email: "a@b.c", displayName: "ผู้ดูแล", role: "approver" };
 const content: TopicContentInput = {
   title: "หัวข้อใหม่",
   categoryId: "print",

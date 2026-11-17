@@ -5,7 +5,14 @@ describe("admin user repository", () => {
   it("finds admins by email case-insensitively", async () => {
     const repo = createMemoryRepositories({
       admins: [
-        { id: "1", email: "admin@bgs.local", displayName: "A", role: "owner", passwordHash: "h" },
+        {
+          id: "1",
+          email: "admin@bgs.local",
+          displayName: "A",
+          role: "owner",
+          passwordHash: "h",
+          active: true,
+        },
       ],
     }).admins;
     expect((await repo.findByEmail(" ADMIN@bgs.local "))?.id).toBe("1");

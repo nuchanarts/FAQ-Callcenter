@@ -24,15 +24,24 @@ import { cn } from "@/lib/cn";
 const f = th.admin.form;
 
 /** Create/edit form shared by both admin pages (Constitution XIII), with a live viewer preview. */
-export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
+export function TopicForm({
+  topic,
+  canPublish = true,
+}: {
+  topic?: EffectiveTopic;
+  /** false = author: saving submits a draft for approval instead of publishing. */
+  canPublish?: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
-  const [title, setTitle] = useState(topic?.title ?? "");
-  const [categoryId, setCategoryId] = useState<CategoryId | "">(topic?.categoryId ?? "");
-  const [level, setLevel] = useState<Level>(topic?.level ?? "self");
-  const [keywords, setKeywords] = useState(topic?.keywords.join(", ") ?? "");
-  const [solution, setSolution] = useState(topic?.solution ?? "");
-  const [attachments, setAttachments] = useState<Attachment[]>(topic?.attachments ?? []);
+  // Continue from the latest draft when there is one (author's rework or approver's review).
+  const start = topic?.draft?.content ?? topic;
+  const [title, setTitle] = useState(start?.title ?? "");
+  const [categoryId, setCategoryId] = useState<CategoryId | "">(start?.categoryId ?? "");
+  const [level, setLevel] = useState<Level>(start?.level ?? "self");
+  const [keywords, setKeywords] = useState(start?.keywords.join(", ") ?? "");
+  const [solution, setSolution] = useState(start?.solution ?? "");
+  const [attachments, setAttachments] = useState<Attachment[]>(start?.attachments ?? []);
   const [error, setError] = useState<ActionError | null>(null);
   const [pending, setPending] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -74,7 +83,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
       setPending(false);
     }
     setDirty(false);
-    toast.show(th.admin.saved);
+    toast.show(canPublish ? th.admin.saved : th.admin.review.submitted);
     router.push("/admin");
     router.refresh();
   }
@@ -86,6 +95,11 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
       className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]"
     >
       <div className="flex flex-col gap-5">
+        {!canPublish && (
+          <p className="rounded-soft border border-level-team/30 bg-level-team-soft px-4 py-3 text-ink">
+            {th.admin.review.authorNotice}
+          </p>
+        )}
         {error && !error.fieldErrors && (
           <div
             role="alert"
@@ -196,7 +210,7 @@ export function TopicForm({ topic }: { topic?: EffectiveTopic }) {
 
         <div className="flex flex-wrap gap-3">
           <Button type="submit" size="lg" pending={pending}>
-            {th.admin.actions.save}
+            {canPublish ? th.admin.actions.save : th.admin.review.submit}
           </Button>
           <Link href="/admin" className={buttonClass("ghost", "lg")}>
             <ArrowLeft aria-hidden className="size-5" />

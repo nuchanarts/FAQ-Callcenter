@@ -18,7 +18,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "next build && playwright test",
     "prepare": "simple-git-hooks",
-    "hash-password": "node scripts/hash-password.ts"
+    "hash-password": "node scripts/hash-password.ts",
+    "create-owner": "node scripts/create-owner.ts"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged && npm run typecheck"

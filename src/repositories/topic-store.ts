@@ -30,12 +30,41 @@ export function listTopics(records: StoredTopic[]): StoredTopic[] {
   return clone(records);
 }
 
-export function createAdminUserRepository(admins: AdminUserRecord[]): AdminUserRepository {
+/** Pure admin upsert rule: replace by id, emails unique (case-insensitive). */
+export function applyAdminUpsert(
+  admins: AdminUserRecord[],
+  admin: AdminUserRecord,
+): AdminUserRecord[] {
+  const record = { ...admin, email: admin.email.trim().toLowerCase() };
+  if (admins.some((a) => a.id !== record.id && a.email.toLowerCase() === record.email)) {
+    throw new ConflictError();
+  }
+  const index = admins.findIndex((a) => a.id === record.id);
+  const next = [...admins];
+  if (index >= 0) next[index] = clone(record);
+  else next.push(clone(record));
+  return next;
+}
+
+export function findAdminByEmail(admins: AdminUserRecord[], email: string): AdminUserRecord | null {
+  const key = email.trim().toLowerCase();
+  const found = admins.find((a) => a.email.toLowerCase() === key);
+  return found ? clone(found) : null;
+}
+
+/** In-process admin store (memory/failing backends; seeded with demo admins when allowed). */
+export function createAdminUserRepository(seed: AdminUserRecord[]): AdminUserRepository {
+  let admins = clone(seed);
   return {
     async findByEmail(email) {
-      const key = email.trim().toLowerCase();
-      const found = admins.find((a) => a.email.toLowerCase() === key);
-      return found ? clone(found) : null;
+      return findAdminByEmail(admins, email);
+    },
+    async list() {
+      return clone(admins);
+    },
+    async upsert(admin) {
+      admins = applyAdminUpsert(admins, admin);
+      return findAdminByEmail(admins, admin.email)!;
     },
   };
 }

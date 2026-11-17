@@ -13,9 +13,16 @@ export const DEMO_ADMINS = [
   {
     id: "a-editor",
     email: "editor@bgs.local",
-    displayName: "ทีมเนื้อหา",
-    role: "editor",
+    displayName: "ผู้อนุมัติเนื้อหา",
+    role: "approver",
     password: "Editor#2026",
+  },
+  {
+    id: "a-author",
+    email: "author@bgs.local",
+    displayName: "ผู้เขียนเนื้อหา",
+    role: "author",
+    password: "Author#2026",
   },
 ] as const;
 
@@ -23,5 +30,6 @@ export function demoAdminRecords(): AdminUserRecord[] {
   return DEMO_ADMINS.map(({ password, ...rest }) => ({
     ...rest,
     passwordHash: hashPasswordSync(password),
+    active: true,
   }));
 }

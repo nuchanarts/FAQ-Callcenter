@@ -27,7 +27,7 @@ export function createAuthService(deps: { admins: AdminUserRepository }) {
     const user = await deps.admins.findByEmail(email);
     // Always run a hash check so response time does not reveal whether the email exists.
     const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
-    if (!user || !valid) throw new ValidationError(th.auth.invalid);
+    if (!user || !valid || !user.active) throw new ValidationError(th.auth.invalid);
     return { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
   }
   return { signIn };

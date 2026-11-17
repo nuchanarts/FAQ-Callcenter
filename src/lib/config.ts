@@ -1,4 +1,4 @@
-export const BACKENDS = ["file", "memory", "failing", "supabase"] as const;
+export const BACKENDS = ["file", "memory", "failing", "supabase", "sheets"] as const;
 export type Backend = (typeof BACKENDS)[number];
 
 const DEV_SECRET = "dev-only-session-secret-do-not-use-in-prod";
@@ -13,6 +13,7 @@ export interface AppConfig {
   dataFile: string;
   allowDemoAdmins: boolean;
   supabase?: { url: string; serviceRoleKey: string };
+  sheets?: { url: string; secret: string };
 }
 
 type Env = Record<string, string | undefined>;
@@ -52,6 +53,16 @@ export function readConfig(env: Env = process.env): AppConfig {
       throw new Error("NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required");
     }
     config.supabase = { url, serviceRoleKey };
+  }
+  if (backend === "sheets") {
+    const url = env.SHEET_WEBHOOK_URL;
+    const secret = env.SHEET_WEBHOOK_SECRET;
+    if (!url || !secret) {
+      throw new Error(
+        "SHEET_WEBHOOK_URL and SHEET_WEBHOOK_SECRET are required for DATA_BACKEND=sheets",
+      );
+    }
+    config.sheets = { url, secret };
   }
   return config;
 }

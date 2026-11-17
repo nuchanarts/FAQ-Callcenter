@@ -23,7 +23,13 @@ type Dialog = null | "restore" | "delete" | "delete-final";
  * Per-topic admin actions (Constitution VI): built-ins can be hidden/restored but never deleted;
  * custom topics can be deleted only after two confirmations.
  */
-export function TopicRowActions({ topic }: { topic: EffectiveTopic }) {
+export function TopicRowActions({
+  topic,
+  canPublish,
+}: {
+  topic: EffectiveTopic;
+  canPublish: boolean;
+}) {
   const { run, pending } = useActionFeedback();
   const [dialog, setDialog] = useState<Dialog>(null);
   const close = () => setDialog(null);
@@ -66,21 +72,23 @@ export function TopicRowActions({ topic }: { topic: EffectiveTopic }) {
         <Pencil aria-hidden className="size-4" />
         {a.edit}
       </Link>
-      <Button
-        variant="ghost"
-        size="sm"
-        pending={pending}
-        aria-label={label(topic.hidden ? a.show : a.hide)}
-        onClick={toggleHidden}
-      >
-        {topic.hidden ? (
-          <Eye aria-hidden className="size-4" />
-        ) : (
-          <EyeOff aria-hidden className="size-4" />
-        )}
-        {topic.hidden ? a.show : a.hide}
-      </Button>
-      {topic.status === "edited" && (
+      {canPublish && topic.published && (
+        <Button
+          variant="ghost"
+          size="sm"
+          pending={pending}
+          aria-label={label(topic.hidden ? a.show : a.hide)}
+          onClick={toggleHidden}
+        >
+          {topic.hidden ? (
+            <Eye aria-hidden className="size-4" />
+          ) : (
+            <EyeOff aria-hidden className="size-4" />
+          )}
+          {topic.hidden ? a.show : a.hide}
+        </Button>
+      )}
+      {canPublish && topic.status === "edited" && (
         <Button
           variant="ghost"
           size="sm"
@@ -91,7 +99,7 @@ export function TopicRowActions({ topic }: { topic: EffectiveTopic }) {
           {a.restore}
         </Button>
       )}
-      {topic.origin === "custom" && (
+      {canPublish && topic.origin === "custom" && topic.published && (
         <Button
           variant="quiet-danger"
           size="sm"

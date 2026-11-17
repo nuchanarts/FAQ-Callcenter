@@ -11,7 +11,7 @@ import { searchTopics } from "@/domain/search";
 import type { EffectiveTopic, TopicStatus } from "@/domain/topics";
 import { th } from "@/i18n/th";
 
-type StatusFilter = "all" | TopicStatus | "hidden";
+type StatusFilter = "all" | TopicStatus | "hidden" | "pending" | "rejected";
 
 const t = th.admin;
 const STATUS_TONE = { original: "neutral", edited: "partial", custom: "herb" } as const;
@@ -25,11 +25,19 @@ const dateFormat = new Intl.DateTimeFormat("th-TH", {
 function matchesStatus(topic: EffectiveTopic, status: StatusFilter): boolean {
   if (status === "all") return true;
   if (status === "hidden") return topic.hidden;
+  if (status === "pending" || status === "rejected") return topic.draft?.status === status;
   return topic.status === status;
 }
 
 /** Admin topic list with category/status filters and search (FR-018). */
-export function TopicTable({ topics }: { topics: EffectiveTopic[] }) {
+export function TopicTable({
+  topics,
+  canPublish,
+}: {
+  topics: EffectiveTopic[];
+  /** Approver/owner: show publish-only actions (hide, restore, delete). */
+  canPublish: boolean;
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryId | "">("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -70,6 +78,8 @@ export function TopicTable({ topics }: { topics: EffectiveTopic[] }) {
           onChange={(e) => setStatus(e.target.value as StatusFilter)}
         >
           <option value="all">{t.statusAll}</option>
+          <option value="pending">{t.status.pending}</option>
+          <option value="rejected">{t.status.rejected}</option>
           <option value="original">{t.status.original}</option>
           <option value="edited">{t.status.edited}</option>
           <option value="custom">{t.status.custom}</option>
@@ -122,6 +132,13 @@ export function TopicTable({ topics }: { topics: EffectiveTopic[] }) {
                     <div className="flex flex-wrap gap-1.5">
                       <Badge tone={STATUS_TONE[topic.status]}>{t.status[topic.status]}</Badge>
                       {topic.hidden && <Badge tone="danger">{t.status.hidden}</Badge>}
+                      {!topic.published && <Badge tone="neutral">{t.status.unpublished}</Badge>}
+                      {topic.draft?.status === "pending" && (
+                        <Badge tone="partial">{t.status.pending}</Badge>
+                      )}
+                      {topic.draft?.status === "rejected" && (
+                        <Badge tone="danger">{t.status.rejected}</Badge>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-[0.95rem] whitespace-nowrap text-ink-muted">
@@ -130,7 +147,7 @@ export function TopicTable({ topics }: { topics: EffectiveTopic[] }) {
                       : t.neverEdited}
                   </td>
                   <td className="px-4 py-2">
-                    <TopicRowActions topic={topic} />
+                    <TopicRowActions topic={topic} canPublish={canPublish} />
                   </td>
                 </tr>
               ))}

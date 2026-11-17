@@ -28,6 +28,8 @@ function topic(p: Partial<EffectiveTopic> & { id: string; title: string }): Effe
     hidden: false,
     order: 0,
     version: 0,
+    published: true,
+    draft: null,
     categoryId: "login",
     level: "self",
     keywords: [],
@@ -140,7 +142,7 @@ describe("TopicTable", () => {
   ];
 
   it("filters by status and text", async () => {
-    wrap(<TopicTable topics={topics} />);
+    wrap(<TopicTable canPublish topics={topics} />);
     expect(screen.getAllByRole("row")).toHaveLength(4);
     await userEvent.selectOptions(screen.getByLabelText("สถานะ"), "hidden");
     expect(screen.getAllByRole("row")).toHaveLength(2);
@@ -150,7 +152,7 @@ describe("TopicTable", () => {
   });
 
   it("offers restore only for edited built-ins and delete only for custom topics", () => {
-    wrap(<TopicTable topics={topics} />);
+    wrap(<TopicTable canPublish topics={topics} />);
     const rows = screen.getAllByRole("row").slice(1);
     expect(within(rows[0]!).queryByRole("button", { name: /คืนค่าเดิม/ })).toBeNull();
     expect(within(rows[0]!).queryByRole("button", { name: /ลบ/ })).toBeNull();
@@ -161,7 +163,7 @@ describe("TopicTable", () => {
 
   it("requires two confirmations to delete", async () => {
     actions.deleteTopicAction.mockResolvedValue({ ok: true, data: { id: "c-1" } });
-    wrap(<TopicTable topics={topics} />);
+    wrap(<TopicTable canPublish topics={topics} />);
     await userEvent.click(screen.getByRole("button", { name: /ลบ เพิ่มเอง/ }));
     await userEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "ลบ" }));
     expect(actions.deleteTopicAction).not.toHaveBeenCalled();
@@ -177,7 +179,7 @@ describe("TopicTable", () => {
       ok: false,
       error: { code: "conflict", message: "มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่" },
     });
-    wrap(<TopicTable topics={topics} />);
+    wrap(<TopicTable canPublish topics={topics} />);
     await userEvent.click(screen.getByRole("button", { name: /ซ่อน แก้แล้ว/ }));
     expect(await screen.findByText("มีคนแก้ไขหัวข้อนี้ไปแล้ว กรุณาโหลดใหม่")).toBeInTheDocument();
     expect(refresh).toHaveBeenCalled();
@@ -185,7 +187,7 @@ describe("TopicTable", () => {
 
   it("hides a topic with its current version", async () => {
     actions.setTopicHiddenAction.mockResolvedValue({ ok: true, data: topics[1] });
-    wrap(<TopicTable topics={topics} />);
+    wrap(<TopicTable canPublish topics={topics} />);
     await userEvent.click(screen.getByRole("button", { name: /ซ่อน แก้แล้ว/ }));
     expect(actions.setTopicHiddenAction).toHaveBeenCalledWith({
       id: "b-2",

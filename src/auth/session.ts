@@ -1,5 +1,5 @@
 import { jwtVerify, SignJWT } from "jose";
-import { ADMIN_ROLES, type AdminRole } from "@/domain/permissions";
+import { toRole, type AdminRole } from "@/domain/permissions";
 import { getConfig } from "@/lib/config";
 
 export const SESSION_COOKIE = "bgs_admin_session";
@@ -14,10 +14,6 @@ export interface SessionUser {
 
 const key = () => new TextEncoder().encode(getConfig().sessionSecret);
 
-function isRole(value: unknown): value is AdminRole {
-  return (ADMIN_ROLES as readonly unknown[]).includes(value);
-}
-
 export async function signSession(user: SessionUser): Promise<string> {
   return new SignJWT({ ...user })
     .setProtectedHeader({ alg: "HS256" })
@@ -30,12 +26,13 @@ export async function verifySession(token: string | undefined): Promise<SessionU
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, key(), { algorithms: ["HS256"] });
-    const { id, email, displayName, role } = payload;
+    const { id, email, displayName } = payload;
+    const role = toRole(payload.role);
     if (
       typeof id !== "string" ||
       typeof email !== "string" ||
       typeof displayName !== "string" ||
-      !isRole(role)
+      !role
     ) {
       return null;
     }

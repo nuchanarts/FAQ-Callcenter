@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { SessionUser } from "@/auth/session";
 import { ConflictError, NotDeletableError, NotFoundError, ValidationError } from "@/domain/errors";
-import { assertAdmin } from "@/domain/permissions";
+import { assertAdmin, assertCanPublish, canPublish } from "@/domain/permissions";
 import { parseTopicContent, type TopicContent } from "@/domain/topic";
 import {
   mergeTopics,
@@ -9,7 +9,9 @@ import {
   type BaseTopic,
   type EffectiveTopic,
   type StoredTopic,
+  type TopicDraft,
 } from "@/domain/topics";
+import { th } from "@/i18n/th";
 import type { TopicRepository } from "@/repositories/types";
 
 export interface TopicServiceDeps {
@@ -58,7 +60,7 @@ export function createTopicService(deps: TopicServiceDeps) {
     actor: SessionUser,
     id: string,
     expectedVersion: number,
-    patch: { content?: TopicContent | null; hidden?: boolean },
+    patch: { content?: TopicContent | null; hidden?: boolean; draft?: TopicDraft | null },
   ): Promise<EffectiveTopic> {
     const stored = await readStored();
     const current = find(stored, id);
@@ -70,6 +72,7 @@ export function createTopicService(deps: TopicServiceDeps) {
         origin: current.origin,
         content: patch.content !== undefined ? patch.content : (existing?.content ?? null),
         hidden: patch.hidden ?? existing?.hidden ?? false,
+        draft: patch.draft !== undefined ? patch.draft : (existing?.draft ?? null),
         version: expectedVersion + 1,
         createdAt: existing?.createdAt ?? stamp,
         updatedAt: stamp,
@@ -111,16 +114,27 @@ export function createTopicService(deps: TopicServiceDeps) {
     return find(await readStored(), id);
   }
 
+  const newDraft = (user: SessionUser, content: TopicContent): TopicDraft => ({
+    content,
+    by: user.displayName,
+    at: deps.now().toISOString(),
+    status: "pending",
+    note: null,
+  });
+
+  /** Approvers publish directly; authors create a draft-only topic viewers can't see yet. */
   async function createTopic(actor: Actor, input: unknown): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
     const content = parseTopicContent(input);
+    const publish = canPublish(user);
     const stamp = deps.now().toISOString();
     const stored = await readStored();
     const saved = await deps.topics.upsert(
       {
         id: newId(),
         origin: "custom",
-        content,
+        content: publish ? content : null,
+        draft: publish ? null : newDraft(user, content),
         hidden: false,
         version: 1,
         createdAt: stamp,
@@ -140,14 +154,69 @@ export function createTopicService(deps: TopicServiceDeps) {
   ): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
     const content = parseTopicContent(input.content);
-    return write(user, input.id, input.expectedVersion, { content });
+    // Approver/owner: publish now (any pending draft is superseded). Author: (re)submit a draft.
+    if (canPublish(user))
+      return write(user, input.id, input.expectedVersion, { content, draft: null });
+    return write(user, input.id, input.expectedVersion, { draft: newDraft(user, content) });
+  }
+
+  async function pendingDraft(id: string): Promise<TopicDraft> {
+    const draft = find(await readStored(), id).draft;
+    if (!draft) throw new ValidationError(th.admin.review.noDraft);
+    return draft;
+  }
+
+  /** Publish the author's draft as-is. */
+  async function approveDraft(
+    actor: Actor,
+    input: { id: string; expectedVersion: number },
+  ): Promise<EffectiveTopic> {
+    const user = assertCanPublish(actor);
+    const draft = await pendingDraft(input.id);
+    return write(user, input.id, input.expectedVersion, { content: draft.content, draft: null });
+  }
+
+  /** Send the draft back to the author with a reason; viewers keep the published version. */
+  async function rejectDraft(
+    actor: Actor,
+    input: { id: string; expectedVersion: number; note: string },
+  ): Promise<EffectiveTopic> {
+    const user = assertCanPublish(actor);
+    const note = input.note.trim();
+    if (!note)
+      throw new ValidationError(th.validation.required, { note: [th.validation.required] });
+    const draft = await pendingDraft(input.id);
+    return write(user, input.id, input.expectedVersion, {
+      draft: { ...draft, status: "rejected", note },
+    });
+  }
+
+  /** Withdraw a draft (any admin). A topic that only ever existed as a draft is removed. */
+  async function discardDraft(
+    actor: Actor,
+    input: { id: string; expectedVersion: number },
+  ): Promise<{ id: string; removed: boolean }> {
+    const user = assertAdmin(actor);
+    const existing = await deps.topics.get(input.id);
+    if (!existing?.draft) throw new ValidationError(th.admin.review.noDraft);
+    if (existing.version !== input.expectedVersion) throw new ConflictError();
+    if (existing.origin === "custom" && existing.content === null) {
+      await deps.topics.delete(input.id);
+      lastKnown.set(
+        deps.topics,
+        (lastKnown.get(deps.topics) ?? []).filter((s) => s.id !== input.id),
+      );
+      return { id: input.id, removed: true };
+    }
+    await write(user, input.id, input.expectedVersion, { draft: null });
+    return { id: input.id, removed: false };
   }
 
   async function setHidden(
     actor: Actor,
     input: { id: string; hidden: boolean; expectedVersion: number },
   ): Promise<EffectiveTopic> {
-    const user = assertAdmin(actor);
+    const user = assertCanPublish(actor);
     return write(user, input.id, input.expectedVersion, { hidden: input.hidden });
   }
 
@@ -155,7 +224,7 @@ export function createTopicService(deps: TopicServiceDeps) {
     actor: Actor,
     input: { id: string; expectedVersion: number },
   ): Promise<EffectiveTopic> {
-    const user = assertAdmin(actor);
+    const user = assertCanPublish(actor);
     if (!baseIds.has(input.id)) {
       // Only built-in topics have an original to restore.
       find(await readStored(), input.id);
@@ -169,7 +238,7 @@ export function createTopicService(deps: TopicServiceDeps) {
     actor: Actor,
     input: { id: string; expectedVersion: number },
   ): Promise<{ id: string }> {
-    assertAdmin(actor);
+    assertCanPublish(actor);
     if (baseIds.has(input.id)) throw new NotDeletableError();
     const existing = await deps.topics.get(input.id);
     if (!existing) throw new NotFoundError("topic");
@@ -186,6 +255,9 @@ export function createTopicService(deps: TopicServiceDeps) {
     getForAdmin,
     createTopic,
     saveTopic,
+    approveDraft,
+    rejectDraft,
+    discardDraft,
     setHidden,
     restoreTopic,
     deleteTopic,

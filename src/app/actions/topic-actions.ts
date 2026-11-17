@@ -59,3 +59,29 @@ export async function deleteTopicAction(input: {
     topicService().deleteTopic(await getAdmin(), parseOrThrow(versioned, input)),
   );
 }
+
+export async function approveDraftAction(input: { id: string; expectedVersion: number }): Result {
+  return runAction(async () =>
+    topicService().approveDraft(await getAdmin(), parseOrThrow(versioned, input)),
+  );
+}
+
+export async function rejectDraftAction(input: {
+  id: string;
+  expectedVersion: number;
+  note: string;
+}): Result {
+  return runAction(async () => {
+    const args = parseOrThrow(versioned.extend({ note: z.string().max(500) }), input);
+    return topicService().rejectDraft(await getAdmin(), args);
+  });
+}
+
+export async function discardDraftAction(input: {
+  id: string;
+  expectedVersion: number;
+}): Promise<ActionResult<{ id: string; removed: boolean }>> {
+  return runAction(async () =>
+    topicService().discardDraft(await getAdmin(), parseOrThrow(versioned, input)),
+  );
+}

@@ -2,8 +2,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { StoredTopic } from "@/domain/topics";
 import {
+  applyAdminUpsert,
   applyUpsert,
-  createAdminUserRepository,
+  findAdminByEmail,
   findTopic,
   listTopics,
 } from "@/repositories/topic-store";
@@ -11,6 +12,8 @@ import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
 interface FileShape {
   topics: StoredTopic[];
+  /** Absent until an admin account is first changed; until then the seed admins apply. */
+  admins?: AdminUserRecord[];
 }
 
 /**
@@ -24,21 +27,32 @@ export function createFileRepositories(opts: {
   const { file } = opts;
   let queue: Promise<unknown> = Promise.resolve();
 
-  async function load(): Promise<StoredTopic[]> {
+  async function loadAll(): Promise<FileShape> {
     try {
       const data = JSON.parse(await readFile(file, "utf8")) as Partial<FileShape>;
-      return Array.isArray(data.topics) ? data.topics : [];
+      return {
+        topics: Array.isArray(data.topics) ? data.topics : [],
+        admins: Array.isArray(data.admins) ? data.admins : undefined,
+      };
     } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") return [];
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") return { topics: [] };
       throw err;
     }
   }
 
-  async function save(topics: StoredTopic[]): Promise<void> {
+  const load = async () => (await loadAll()).topics;
+  const loadAdmins = async () => (await loadAll()).admins ?? opts.admins;
+
+  async function saveAll(data: FileShape): Promise<void> {
     await mkdir(dirname(file), { recursive: true });
     const tmp = `${file}.${process.pid}.tmp`;
-    await writeFile(tmp, JSON.stringify({ topics } satisfies FileShape, null, 2), "utf8");
+    await writeFile(tmp, JSON.stringify(data, null, 2), "utf8");
     await rename(tmp, file);
+  }
+
+  async function save(topics: StoredTopic[]): Promise<void> {
+    const current = await loadAll();
+    await saveAll({ ...current, topics });
   }
 
   function serialized<T>(fn: () => Promise<T>): Promise<T> {
@@ -49,7 +63,22 @@ export function createFileRepositories(opts: {
 
   return {
     backend: "file",
-    admins: createAdminUserRepository(opts.admins),
+    admins: {
+      async findByEmail(email) {
+        return findAdminByEmail(await loadAdmins(), email);
+      },
+      async list() {
+        return structuredClone(await loadAdmins());
+      },
+      upsert(admin) {
+        return serialized(async () => {
+          const current = await loadAll();
+          const admins = applyAdminUpsert(current.admins ?? opts.admins, admin);
+          await saveAll({ ...current, admins });
+          return findAdminByEmail(admins, admin.email)!;
+        });
+      },
+    },
     topics: {
       async list() {
         return listTopics(await load());

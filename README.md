@@ -73,14 +73,14 @@ src/i18n/th.ts    every user-facing string
 
 See [`.env.example`](.env.example).
 
-| Variable                                                | Default           | Notes                                                                           |
-| ------------------------------------------------------- | ----------------- | ------------------------------------------------------------------------------- |
-| `DATA_BACKEND`                                          | `file` (dev only) | **Required in production**: `file` · `memory` · `failing` · `supabase`          |
-| `SESSION_SECRET`                                        | dev value         | **Required in production**, ≥ 32 random characters; example values are rejected |
-| `ALLOW_DEMO_ADMINS`                                     | off in production | Seeds the demo admins (E2E only)                                                |
-| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | —                 | Required for `supabase`                                                         |
-| `SHEET_WEBHOOK_URL`, `SHEET_WEBHOOK_SECRET`             | — (logging off)   | Google Sheet log of reports + topic views, see below                            |
-| `MANUALS_SHEET_ID`                                      | — (built-in copy) | Google Sheet with the "คู่มือ" page content, see below                             |
+| Variable                                                | Default           | Notes                                                                             |
+| ------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------- |
+| `DATA_BACKEND`                                          | `file` (dev only) | **Required in production**: `file` · `memory` · `failing` · `supabase` · `sheets` |
+| `SESSION_SECRET`                                        | dev value         | **Required in production**, ≥ 32 random characters; example values are rejected   |
+| `ALLOW_DEMO_ADMINS`                                     | off in production | Seeds the demo admins (E2E only)                                                  |
+| `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | —                 | Required for `supabase`                                                           |
+| `SHEET_WEBHOOK_URL`, `SHEET_WEBHOOK_SECRET`             | — (logging off)   | Google Sheet log of reports + topic views, see below                              |
+| `MANUALS_SHEET_ID`                                      | — (built-in copy) | Google Sheet with the "คู่มือ" page content, see below                               |
 
 ## Manual library ("คู่มือ & วิดีโอ" page)
 
@@ -91,6 +91,26 @@ endpoint, so the Sheet must be shared **"Anyone with the link: Viewer"**; change
 private or down, each tab falls back to the built-in copy in `src/content/base-manuals.ts`.
 Rules: `show` blank = visible, `ไม่`/`no` = hidden; links must be `https://`; don't rename tabs
 or header cells.
+
+## Roles and FAQ approval
+
+| Role             | Can do                                                                       |
+| ---------------- | ---------------------------------------------------------------------------- |
+| owner (ผู้ดูแลระบบ) | everything + manage accounts and roles at `/admin/users`                     |
+| approver (ผู้อนุมัติ) | edit and publish immediately, approve / reject drafts, hide, restore, delete |
+| author (ผู้เขียน)   | write or edit as a draft; viewers see nothing until an approver approves     |
+
+The legacy role `editor` is treated as `approver`. Owners cannot demote or disable themselves,
+and at least one active owner must remain.
+
+## Google Sheet as the database (`DATA_BACKEND=sheets`)
+
+FAQ topics (tab `faq_topics`) and admin accounts (tab `admin_users`) live in the same Google
+Sheet as the logs, read and written only through the Apps Script with the shared secret, so the
+Sheet must be shared **Restricted**. Reads are cached per server instance (topics 20 s, admins
+60 s). Create the first owner with
+`npm run create-owner -- <email> "<name>" "<password 12+ chars>"`, then add others in the app.
+Never edit `admin_users` by hand.
 
 ## Google Sheet log (reports + topic views)
 

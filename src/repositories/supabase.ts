@@ -1,8 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { ConflictError } from "@/domain/errors";
-import type { AdminRole } from "@/domain/permissions";
+import { toRole } from "@/domain/permissions";
 import type { TopicContent } from "@/domain/topic";
-import type { StoredTopic, TopicOrigin } from "@/domain/topics";
+import type { StoredTopic, TopicDraft, TopicOrigin } from "@/domain/topics";
 import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
 interface TopicRow {
@@ -14,15 +14,19 @@ interface TopicRow {
   created_at: string;
   updated_at: string;
   updated_by: string;
+  draft: TopicDraft | null;
 }
 
 interface AdminRow {
   id: string;
   email: string;
   display_name: string;
-  role: AdminRole;
+  role: string;
   password_hash: string;
+  active: boolean;
 }
+
+const ADMIN_COLUMNS = "id, email, display_name, role, password_hash, active";
 
 const UNIQUE_VIOLATION = "23505";
 
@@ -35,6 +39,7 @@ const toStored = (r: TopicRow): StoredTopic => ({
   createdAt: r.created_at,
   updatedAt: r.updated_at,
   updatedBy: r.updated_by,
+  draft: r.draft ?? null,
 });
 
 const toRow = (t: StoredTopic): TopicRow => ({
@@ -46,20 +51,31 @@ const toRow = (t: StoredTopic): TopicRow => ({
   created_at: t.createdAt,
   updated_at: t.updatedAt,
   updated_by: t.updatedBy,
+  draft: t.draft ?? null,
 });
 
 const toAdmin = (r: AdminRow): AdminUserRecord => ({
   id: r.id,
   email: r.email,
   displayName: r.display_name,
-  role: r.role,
+  role: toRole(r.role) ?? "author",
   passwordHash: r.password_hash,
+  active: r.active ?? true,
+});
+
+const toAdminRow = (a: AdminUserRecord): AdminRow => ({
+  id: a.id,
+  email: a.email.trim().toLowerCase(),
+  display_name: a.displayName,
+  role: a.role,
+  password_hash: a.passwordHash,
+  active: a.active,
 });
 
 /**
  * Production adapter (server-side only, service-role key).
  * Admin passwords are verified by the app (scrypt) so sessions behave the same on every backend.
- * Schema + RLS: supabase/migrations/0001_init.sql.
+ * Schema + RLS: supabase/migrations/0001_init.sql, 0002_roles_drafts.sql.
  */
 export function createSupabaseRepositories(opts: {
   url: string;
@@ -109,11 +125,26 @@ export function createSupabaseRepositories(opts: {
       async findByEmail(email) {
         const { data, error } = await db
           .from("admin_users")
-          .select("id, email, display_name, role, password_hash")
+          .select(ADMIN_COLUMNS)
           .eq("email", email.trim().toLowerCase())
           .maybeSingle();
         if (error) throw error;
         return data ? toAdmin(data as AdminRow) : null;
+      },
+      async list() {
+        const { data, error } = await db.from("admin_users").select(ADMIN_COLUMNS).order("email");
+        if (error) throw error;
+        return (data as AdminRow[]).map(toAdmin);
+      },
+      async upsert(admin) {
+        const { data, error } = await db
+          .from("admin_users")
+          .upsert(toAdminRow(admin), { onConflict: "id" })
+          .select(ADMIN_COLUMNS)
+          .single();
+        if (error?.code === UNIQUE_VIOLATION) throw new ConflictError();
+        if (error) throw error;
+        return toAdmin(data as AdminRow);
       },
     },
   };

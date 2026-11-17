@@ -16,14 +16,20 @@ export interface TopicRepository {
 
 export interface AdminUserRecord {
   id: string;
+  /** Always lower-case. */
   email: string;
   displayName: string;
   role: AdminRole;
   passwordHash: string;
+  /** false = disabled (cannot sign in; kept for history). */
+  active: boolean;
 }
 
 export interface AdminUserRepository {
   findByEmail(email: string): Promise<AdminUserRecord | null>;
+  list(): Promise<AdminUserRecord[]>;
+  /** Insert or replace by id. Throws ConflictError if another account already uses the email. */
+  upsert(admin: AdminUserRecord): Promise<AdminUserRecord>;
 }
 
 export interface Repositories {

@@ -5,6 +5,7 @@ import { createFailingRepositories } from "@/repositories/failing";
 import { createFileRepositories } from "@/repositories/file";
 import { createMemoryRepositories } from "@/repositories/memory";
 import { demoAdminRecords } from "@/repositories/seed-admins";
+import { createSheetsRepositories } from "@/repositories/sheets";
 import { createSupabaseRepositories } from "@/repositories/supabase";
 import type { Repositories } from "@/repositories/types";
 
@@ -18,6 +19,8 @@ function build(): Repositories {
       return createFailingRepositories({ admins });
     case "supabase":
       return createSupabaseRepositories(config.supabase!);
+    case "sheets":
+      return createSheetsRepositories(config.sheets!);
     case "file":
       return createFileRepositories({
         // Runtime data file, not a source asset: keep it out of output file tracing.

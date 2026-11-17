@@ -12,6 +12,7 @@ const repos = createMemoryRepositories({
       displayName: "ผู้ดูแล",
       role: "owner",
       passwordHash: hashPasswordSync("Admin#2026"),
+      active: true,
     },
   ],
 });

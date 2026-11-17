@@ -32,7 +32,7 @@ describe("current admin", () => {
     expect(await getAdmin()).toMatchObject({
       id: "a-editor",
       email: "editor@bgs.local",
-      role: "editor",
+      role: "approver",
     });
   });
 
