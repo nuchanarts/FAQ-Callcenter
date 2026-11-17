@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { ConflictError } from "@/domain/errors";
 import { toRole } from "@/domain/permissions";
 import type { TopicContent } from "@/domain/topic";
+import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic, TopicDraft, TopicOrigin } from "@/domain/topics";
 import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
@@ -119,6 +120,37 @@ export function createSupabaseRepositories(opts: {
       async delete(id) {
         const { error } = await db.from("topics").delete().eq("id", id);
         if (error) throw error;
+      },
+    },
+    taxonomy: {
+      async get() {
+        const { data, error } = await db
+          .from("app_settings")
+          .select("value, version")
+          .eq("key", "taxonomy")
+          .maybeSingle();
+        if (error) throw error;
+        return data ? { taxonomy: data.value as Taxonomy, version: data.version as number } : null;
+      },
+      async save(taxonomy, expectedVersion) {
+        const version = (expectedVersion ?? 0) + 1;
+        if (expectedVersion === null) {
+          const { error } = await db
+            .from("app_settings")
+            .insert({ key: "taxonomy", value: taxonomy, version });
+          if (error?.code === UNIQUE_VIOLATION) throw new ConflictError();
+          if (error) throw error;
+          return { taxonomy, version };
+        }
+        const { data, error } = await db
+          .from("app_settings")
+          .update({ value: taxonomy, version, updated_at: new Date().toISOString() })
+          .eq("key", "taxonomy")
+          .eq("version", expectedVersion)
+          .select("key");
+        if (error) throw error;
+        if (!data?.length) throw new ConflictError();
+        return { taxonomy, version };
       },
     },
     admins: {

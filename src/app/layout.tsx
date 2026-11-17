@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Anuphan, Sarabun } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
+import { TaxonomyProvider } from "@/components/features/taxonomy/taxonomy-context";
+import { taxonomyService } from "@/services";
 import { skinBootScript } from "@/components/features/layout/skins";
 import { th } from "@/i18n/th";
 import "./globals.css";
@@ -34,7 +36,9 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Categories/levels are editable at /admin/taxonomy; every client component reads them from context.
+  const taxonomy = await taxonomyService().getTaxonomy();
   return (
     <html lang="th" className={`${sarabun.variable} ${anuphan.variable}`} suppressHydrationWarning>
       <head>
@@ -49,7 +53,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         >
           {th.nav.skipToContent}
         </a>
-        <ToastProvider>{children}</ToastProvider>
+        <TaxonomyProvider value={taxonomy}>
+          <ToastProvider>{children}</ToastProvider>
+        </TaxonomyProvider>
       </body>
     </html>
   );

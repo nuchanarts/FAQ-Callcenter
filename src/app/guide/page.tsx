@@ -17,8 +17,8 @@ import { Kbd } from "@/components/ui/kbd";
 import { GuideSteps } from "@/components/features/guide/guide-steps";
 import { SiteHeader } from "@/components/features/layout/site-header";
 import { LevelBadge } from "@/components/features/topic/level-badge";
-import { LEVELS } from "@/domain/levels";
 import { th } from "@/i18n/th";
+import { taxonomyService } from "@/services";
 
 export const metadata: Metadata = { title: th.guide.title };
 export const dynamic = "force-dynamic";
@@ -26,7 +26,10 @@ export const dynamic = "force-dynamic";
 const g = th.guide;
 
 export default async function GuidePage() {
-  const isAdmin = !!(await getAdmin());
+  const [isAdmin, taxonomy] = await Promise.all([
+    getAdmin().then(Boolean),
+    taxonomyService().getTaxonomy(),
+  ]);
   return (
     <>
       <SiteHeader />
@@ -63,8 +66,8 @@ export default async function GuidePage() {
 
           <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
             <div className="flex flex-wrap gap-2 rounded-soft bg-surface-muted p-4">
-              {LEVELS.map((l) => (
-                <LevelBadge key={l} level={l} />
+              {taxonomy.levels.map((l) => (
+                <LevelBadge key={l.id} level={l.id} />
               ))}
             </div>
 

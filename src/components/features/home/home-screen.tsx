@@ -85,7 +85,10 @@ export function HomeScreen({
     [topics, deferredQuery, category],
   );
   const counts = useMemo(() => countByCategory(topics, deferredQuery), [topics, deferredQuery]);
-  const total = useMemo(() => Object.values(counts).reduce((a, b) => a + b, 0), [counts]);
+  const total = useMemo(
+    () => Object.values(counts).reduce<number>((a, b) => a + (b ?? 0), 0),
+    [counts],
+  );
   const searching = normalizeQuery(deferredQuery) !== "";
 
   const selected = results.find((t) => t.id === selectedId) ?? results[0];

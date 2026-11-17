@@ -11,6 +11,7 @@ import {
   type StoredTopic,
   type TopicDraft,
 } from "@/domain/topics";
+import { DEFAULT_TAXONOMY, type Taxonomy } from "@/domain/taxonomy";
 import { th } from "@/i18n/th";
 import type { TopicRepository } from "@/repositories/types";
 
@@ -19,6 +20,8 @@ export interface TopicServiceDeps {
   base: BaseTopic[];
   now: () => Date;
   newId?: () => string;
+  /** Current categories/levels; topics must use existing ids. Defaults to the built-in set. */
+  taxonomy?: () => Promise<Taxonomy>;
 }
 
 export interface PublicTopics {
@@ -42,6 +45,21 @@ const lastKnown = new WeakMap<TopicRepository, StoredTopic[]>();
 export function createTopicService(deps: TopicServiceDeps) {
   const newId = deps.newId ?? (() => `c-${randomUUID()}`);
   const baseIds = new Set(deps.base.map((b) => b.id));
+
+  /** Parse content and check its category/level exist in the current (editable) taxonomy. */
+  async function parseContent(input: unknown): Promise<TopicContent> {
+    const content = parseTopicContent(input);
+    const t = deps.taxonomy ? await deps.taxonomy() : DEFAULT_TAXONOMY;
+    const fieldErrors: Record<string, string[]> = {};
+    if (!t.categories.some((c) => c.id === content.categoryId)) {
+      fieldErrors.categoryId = [th.validation.category];
+    }
+    if (!t.levels.some((l) => l.id === content.level)) fieldErrors.level = [th.validation.level];
+    if (Object.keys(fieldErrors).length > 0) {
+      throw new ValidationError(th.errors.validation, fieldErrors);
+    }
+    return content;
+  }
 
   async function readStored(): Promise<StoredTopic[]> {
     const stored = await deps.topics.list();
@@ -125,7 +143,7 @@ export function createTopicService(deps: TopicServiceDeps) {
   /** Approvers publish directly; authors create a draft-only topic viewers can't see yet. */
   async function createTopic(actor: Actor, input: unknown): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
-    const content = parseTopicContent(input);
+    const content = await parseContent(input);
     const publish = canPublish(user);
     const stamp = deps.now().toISOString();
     const stored = await readStored();
@@ -153,7 +171,7 @@ export function createTopicService(deps: TopicServiceDeps) {
     input: { id: string; expectedVersion: number; content: unknown },
   ): Promise<EffectiveTopic> {
     const user = assertAdmin(actor);
-    const content = parseTopicContent(input.content);
+    const content = await parseContent(input.content);
     // Approver/owner: publish now (any pending draft is superseded). Author: (re)submit a draft.
     if (canPublish(user))
       return write(user, input.id, input.expectedVersion, { content, draft: null });

@@ -118,7 +118,8 @@ describe("searchTopics", () => {
 
 describe("countByCategory", () => {
   it("counts matches per category for the current query", () => {
-    expect(countByCategory(topics, "")).toMatchObject({ authen: 1, print: 1, login: 1, drug: 0 });
-    expect(countByCategory(topics, "authen")).toMatchObject({ authen: 1, print: 1, login: 0 });
+    expect(countByCategory(topics, "")).toMatchObject({ authen: 1, print: 1, login: 1 });
+    expect(countByCategory(topics, "").drug).toBeUndefined();
+    expect(countByCategory(topics, "authen")).toEqual({ authen: 1, print: 1 });
   });
 });

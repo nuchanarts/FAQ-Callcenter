@@ -59,6 +59,10 @@ var DATA_TABS = {
       "updated_by",
     ],
   },
+  settings: {
+    name: "settings",
+    headers: ["key", "value_json", "version"],
+  },
   admins: {
     name: "admin_users",
     headers: ["id", "email", "display_name", "role", "password_hash", "active"],
@@ -83,6 +87,12 @@ function doPost(e) {
         case "topics.delete":
           deleteRow(DATA_TABS.topics, String(body.id));
           return json({ ok: true });
+        case "settings.get": {
+          var setting = findRow(DATA_TABS.settings, "key", String(body.key));
+          return json({ ok: true, data: setting ? setting.record : null });
+        }
+        case "settings.set":
+          return json(setSetting(body));
         case "admins.list":
           return json({ ok: true, data: readRows(DATA_TABS.admins) });
         case "admins.upsert":
@@ -126,6 +136,23 @@ function upsertTopic(row, expectedVersion) {
   }
   writeRow(tab, found ? found.index : null, row);
   return { ok: true, data: row };
+}
+
+function setSetting(body) {
+  var tab = DATA_TABS.settings;
+  var found = findRow(tab, "key", String(body.key));
+  var expected = body.expectedVersion;
+  if (expected === null || expected === undefined) {
+    if (found) return { ok: false, conflict: true };
+  } else if (!found || String(found.record.version) !== String(expected)) {
+    return { ok: false, conflict: true };
+  }
+  writeRow(tab, found ? found.index : null, {
+    key: String(body.key),
+    value_json: String(body.value_json),
+    version: String(body.version),
+  });
+  return { ok: true };
 }
 
 function upsertAdmin(row) {

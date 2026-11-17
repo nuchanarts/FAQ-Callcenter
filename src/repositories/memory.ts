@@ -2,6 +2,7 @@ import type { StoredTopic } from "@/domain/topics";
 import {
   applyUpsert,
   createAdminUserRepository,
+  createTaxonomyRepository,
   findTopic,
   listTopics,
 } from "@/repositories/topic-store";
@@ -13,6 +14,7 @@ export function createMemoryRepositories(opts: { admins: AdminUserRecord[] }): R
   return {
     backend: "memory",
     admins: createAdminUserRepository(opts.admins),
+    taxonomy: createTaxonomyRepository(),
     topics: {
       async list() {
         return listTopics(records);

@@ -6,7 +6,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input, Select } from "@/components/ui/input";
 import { LevelBadge } from "@/components/features/topic/level-badge";
 import { TopicRowActions } from "@/components/features/admin/topic-row-actions";
-import { CATEGORIES, categoryName, type CategoryId } from "@/domain/categories";
+import type { CategoryId } from "@/domain/categories";
+import { categoryName } from "@/domain/taxonomy";
+import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
 import { searchTopics } from "@/domain/search";
 import type { EffectiveTopic, TopicStatus } from "@/domain/topics";
 import { th } from "@/i18n/th";
@@ -38,6 +40,7 @@ export function TopicTable({
   /** Approver/owner: show publish-only actions (hide, restore, delete). */
   canPublish: boolean;
 }) {
+  const taxonomy = useTaxonomy();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<CategoryId | "">("");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -66,7 +69,7 @@ export function TopicTable({
           onChange={(e) => setCategory(e.target.value as CategoryId | "")}
         >
           <option value="">{th.categories.all}</option>
-          {CATEGORIES.map((c) => (
+          {taxonomy.categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
@@ -125,7 +128,7 @@ export function TopicTable({
                     </p>
                     <div className="mt-1 flex flex-wrap items-center gap-2 text-[0.9rem] text-ink-faint">
                       <LevelBadge level={topic.level} />
-                      {categoryName(topic.categoryId)}
+                      {categoryName(taxonomy, topic.categoryId)}
                     </div>
                   </td>
                   <td className="px-4 py-3">

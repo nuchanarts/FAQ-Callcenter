@@ -1,7 +1,8 @@
-/** Self-service level labels (Constitution I). */
-export const LEVELS = ["self", "partial", "team"] as const;
-export type Level = (typeof LEVELS)[number];
+import { DEFAULT_TAXONOMY } from "@/domain/taxonomy";
 
-export function isLevel(value: unknown): value is Level {
-  return typeof value === "string" && (LEVELS as readonly string[]).includes(value);
-}
+/**
+ * Self-service levels (Constitution I) are editable at /admin/taxonomy (src/domain/taxonomy.ts).
+ * These exports describe the built-in default set.
+ */
+export const LEVELS = DEFAULT_TAXONOMY.levels.map((l) => l.id);
+export type Level = string;

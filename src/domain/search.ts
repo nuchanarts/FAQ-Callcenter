@@ -1,4 +1,4 @@
-import { CATEGORY_IDS, type CategoryId } from "@/domain/categories";
+import type { CategoryId } from "@/domain/categories";
 import { toPlainText } from "@/domain/content-format";
 import type { EffectiveTopic } from "@/domain/topics";
 
@@ -85,11 +85,10 @@ export function searchTopics(topics: EffectiveTopic[], opts: SearchOptions): Eff
 export function countByCategory(
   topics: EffectiveTopic[],
   query: string,
-): Record<CategoryId, number> {
-  const counts = Object.fromEntries(CATEGORY_IDS.map((id) => [id, 0])) as Record<
-    CategoryId,
-    number
-  >;
-  for (const { t } of matches(topics, termsOf(query))) counts[t.categoryId] += 1;
+): Partial<Record<CategoryId, number>> {
+  const counts: Partial<Record<CategoryId, number>> = {};
+  for (const { t } of matches(topics, termsOf(query))) {
+    counts[t.categoryId] = (counts[t.categoryId] ?? 0) + 1;
+  }
   return counts;
 }

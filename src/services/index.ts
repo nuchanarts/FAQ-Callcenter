@@ -4,6 +4,7 @@ import { getRepositories } from "@/repositories";
 import { createGoogleVerifier } from "@/auth/google";
 import { getConfig } from "@/lib/config";
 import { createAuthService } from "@/services/auth-service";
+import { createTaxonomyService } from "@/services/taxonomy-service";
 import { createTopicService } from "@/services/topic-service";
 import { createUserService } from "@/services/user-service";
 
@@ -13,6 +14,15 @@ export function topicService() {
     topics: getRepositories().topics,
     base: BASE_TOPICS,
     now: () => new Date(),
+    taxonomy: () => taxonomyService().getTaxonomy(),
+  });
+}
+
+export function taxonomyService() {
+  return createTaxonomyService({
+    taxonomy: getRepositories().taxonomy,
+    topics: getRepositories().topics,
+    base: BASE_TOPICS,
   });
 }
 

@@ -1,5 +1,6 @@
 import { ConflictError } from "@/domain/errors";
 import { toRole } from "@/domain/permissions";
+import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic, TopicOrigin } from "@/domain/topics";
 import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
@@ -159,6 +160,27 @@ export function createSheetsRepositories(opts: SheetsOptions): Repositories {
         if (topicsCache) {
           topicsCache = { at: topicsCache.at, rows: topicsCache.rows.filter((t) => t.id !== id) };
         }
+      },
+    },
+    taxonomy: {
+      async get() {
+        const row = (await call("settings.get", { key: "taxonomy" })) as {
+          value_json: string;
+          version: string;
+        } | null;
+        return row?.value_json
+          ? { taxonomy: JSON.parse(row.value_json) as Taxonomy, version: Number(row.version) }
+          : null;
+      },
+      async save(taxonomy, expectedVersion) {
+        const version = (expectedVersion ?? 0) + 1;
+        await call("settings.set", {
+          key: "taxonomy",
+          value_json: JSON.stringify(taxonomy),
+          version: String(version),
+          expectedVersion,
+        });
+        return { taxonomy, version };
       },
     },
     admins: {

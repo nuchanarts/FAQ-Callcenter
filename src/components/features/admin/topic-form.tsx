@@ -12,9 +12,10 @@ import { useToast } from "@/components/ui/toast";
 import { AttachmentsEditor } from "@/components/features/admin/attachments-editor";
 import { ContentRenderer } from "@/components/features/topic/content-renderer";
 import { LevelBadge } from "@/components/features/topic/level-badge";
-import { CATEGORIES, type CategoryId } from "@/domain/categories";
+import type { CategoryId } from "@/domain/categories";
+import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
 import type { ActionError } from "@/domain/errors";
-import { LEVELS, type Level } from "@/domain/levels";
+import type { Level } from "@/domain/levels";
 import { parseKeywords, TOPIC_LIMITS, type Attachment } from "@/domain/topic";
 import type { EffectiveTopic } from "@/domain/topics";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
@@ -34,11 +35,12 @@ export function TopicForm({
 }) {
   const router = useRouter();
   const toast = useToast();
+  const taxonomy = useTaxonomy();
   // Continue from the latest draft when there is one (author's rework or approver's review).
   const start = topic?.draft?.content ?? topic;
   const [title, setTitle] = useState(start?.title ?? "");
   const [categoryId, setCategoryId] = useState<CategoryId | "">(start?.categoryId ?? "");
-  const [level, setLevel] = useState<Level>(start?.level ?? "self");
+  const [level, setLevel] = useState<Level>(start?.level ?? taxonomy.levels[0]?.id ?? "");
   const [keywords, setKeywords] = useState(start?.keywords.join(", ") ?? "");
   const [solution, setSolution] = useState(start?.solution ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>(start?.attachments ?? []);
@@ -145,7 +147,7 @@ export function TopicForm({
                 <option value="" disabled>
                   {f.chooseCategory}
                 </option>
-                {CATEGORIES.map((c) => (
+                {taxonomy.categories.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -161,7 +163,7 @@ export function TopicForm({
               </span>
             </legend>
             <div className="flex flex-col gap-1.5">
-              {LEVELS.map((l) => (
+              {taxonomy.levels.map(({ id: l }) => (
                 <label
                   key={l}
                   className={cn(

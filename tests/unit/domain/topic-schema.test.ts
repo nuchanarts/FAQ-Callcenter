@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CATEGORIES, CATEGORY_IDS, categoryName, isCategoryId } from "@/domain/categories";
-import { LEVELS, isLevel } from "@/domain/levels";
+import { CATEGORIES, CATEGORY_IDS } from "@/domain/categories";
+import { LEVELS } from "@/domain/levels";
+import { categoryName, DEFAULT_TAXONOMY, findLevel } from "@/domain/taxonomy";
 import { parseTopicContent, parseKeywords, TOPIC_LIMITS } from "@/domain/topic";
 import { ValidationError } from "@/domain/errors";
 
@@ -13,8 +14,8 @@ const valid = {
   attachments: [{ kind: "clip", label: "คลิป", url: "https://youtu.be/x" }],
 };
 
-describe("categories", () => {
-  it("has exactly the 8 constitution categories in order", () => {
+describe("default categories", () => {
+  it("start with the 8 constitution categories in order (editable at /admin/taxonomy)", () => {
     expect(CATEGORIES.map((c) => c.name)).toEqual([
       "เข้าสู่ระบบ / EHP Agent",
       "ตรวจสอบสิทธิ / Authen Code",
@@ -27,18 +28,17 @@ describe("categories", () => {
     ]);
     expect(CATEGORY_IDS).toHaveLength(8);
   });
-  it("validates ids and resolves names", () => {
-    expect(isCategoryId("authen")).toBe(true);
-    expect(isCategoryId("nope")).toBe(false);
-    expect(categoryName("print")).toBe("การพิมพ์ / เครื่องพิมพ์");
+  it("resolves names, falling back to the id for unknown categories", () => {
+    expect(categoryName(DEFAULT_TAXONOMY, "print")).toBe("การพิมพ์ / เครื่องพิมพ์");
+    expect(categoryName(DEFAULT_TAXONOMY, "nope")).toBe("nope");
   });
 });
 
-describe("levels", () => {
-  it("has the three levels", () => {
+describe("default levels", () => {
+  it("start with the three levels; unknown ids render as a neutral badge", () => {
     expect(LEVELS).toEqual(["self", "partial", "team"]);
-    expect(isLevel("team")).toBe(true);
-    expect(isLevel("x")).toBe(false);
+    expect(findLevel(DEFAULT_TAXONOMY, "team").name).toBe("ต้องแจ้งทีม");
+    expect(findLevel(DEFAULT_TAXONOMY, "x")).toMatchObject({ name: "x", tone: "neutral" });
   });
 });
 
@@ -52,8 +52,8 @@ describe("parseTopicContent", () => {
   it.each([
     ["title", { title: "   " }],
     ["title", { title: "x".repeat(TOPIC_LIMITS.title + 1) }],
-    ["categoryId", { categoryId: "other" }],
-    ["level", { level: "maybe" }],
+    ["categoryId", { categoryId: "" }],
+    ["level", { level: " " }],
     ["solution", { solution: "" }],
     ["solution", { solution: "x".repeat(TOPIC_LIMITS.solution + 1) }],
     ["keywords", { keywords: Array.from({ length: 21 }, (_, i) => `k${i}`) }],

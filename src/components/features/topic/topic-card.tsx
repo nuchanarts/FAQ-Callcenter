@@ -5,7 +5,8 @@ import { ChevronDown, ChevronRight } from "lucide-react";
 import { CategoryIcon } from "@/components/features/topic/category-icon";
 import { LevelBadge } from "@/components/features/topic/level-badge";
 import { TopicDetail } from "@/components/features/topic/topic-detail";
-import { CATEGORIES } from "@/domain/categories";
+import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
+import { findCategory } from "@/domain/taxonomy";
 import type { EffectiveTopic } from "@/domain/topics";
 import { th } from "@/i18n/th";
 import { cn } from "@/lib/cn";
@@ -14,7 +15,7 @@ export { reportHref } from "@/components/features/topic/topic-detail";
 
 /** Level badge + category: the same metadata line everywhere a topic is listed. */
 export function TopicMeta({ topic }: { topic: EffectiveTopic }) {
-  const category = CATEGORIES.find((c) => c.id === topic.categoryId);
+  const category = findCategory(useTaxonomy(), topic.categoryId);
   return (
     <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-sans text-[0.95rem] font-normal text-ink-faint">
       <LevelBadge level={topic.level} />

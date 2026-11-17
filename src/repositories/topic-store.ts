@@ -1,6 +1,12 @@
 import { ConflictError } from "@/domain/errors";
 import type { StoredTopic } from "@/domain/topics";
-import type { AdminUserRecord, AdminUserRepository } from "@/repositories/types";
+import type { Taxonomy } from "@/domain/taxonomy";
+import type {
+  AdminUserRecord,
+  AdminUserRepository,
+  StoredTaxonomy,
+  TaxonomyRepository,
+} from "@/repositories/types";
 
 const clone = <T>(v: T): T => structuredClone(v);
 
@@ -50,6 +56,31 @@ export function findAdminByEmail(admins: AdminUserRecord[], email: string): Admi
   const key = email.trim().toLowerCase();
   const found = admins.find((a) => a.email.toLowerCase() === key);
   return found ? clone(found) : null;
+}
+
+/** Pure taxonomy save rule (optimistic concurrency) shared by in-process adapters. */
+export function applyTaxonomySave(
+  current: StoredTaxonomy | null,
+  taxonomy: Taxonomy,
+  expectedVersion: number | null,
+): StoredTaxonomy {
+  if (expectedVersion === null ? current : current?.version !== expectedVersion) {
+    throw new ConflictError();
+  }
+  return { taxonomy: clone(taxonomy), version: (current?.version ?? 0) + 1 };
+}
+
+export function createTaxonomyRepository(): TaxonomyRepository {
+  let stored: StoredTaxonomy | null = null;
+  return {
+    async get() {
+      return stored ? clone(stored) : null;
+    },
+    async save(taxonomy, expectedVersion) {
+      stored = applyTaxonomySave(stored, taxonomy, expectedVersion);
+      return clone(stored);
+    },
+  };
 }
 
 /** In-process admin store (memory/failing backends; seeded with demo admins when allowed). */

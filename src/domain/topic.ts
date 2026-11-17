@@ -1,6 +1,4 @@
 import { z } from "zod";
-import { CATEGORY_IDS } from "@/domain/categories";
-import { LEVELS } from "@/domain/levels";
 import { parseOrThrow } from "@/domain/validation";
 import { th } from "@/i18n/th";
 
@@ -67,8 +65,9 @@ const keywordsSchema = z
 
 export const topicContentSchema = z.object({
   title: requiredText(TOPIC_LIMITS.title),
-  categoryId: z.enum(CATEGORY_IDS, { error: v.category }),
-  level: z.enum(LEVELS, { error: v.level }),
+  // Checked against the current categories/levels by the topic service (they are editable).
+  categoryId: z.string({ error: v.category }).trim().min(1, v.category).max(40),
+  level: z.string({ error: v.level }).trim().min(1, v.level).max(40),
   keywords: keywordsSchema,
   solution: requiredText(TOPIC_LIMITS.solution),
   attachments: z

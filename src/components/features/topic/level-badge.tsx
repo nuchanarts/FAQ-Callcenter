@@ -1,16 +1,34 @@
-import { CircleCheck, CircleDashed, Headset } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import type { Level } from "@/domain/levels";
-import { th } from "@/i18n/th";
+"use client";
 
-const ICONS = { self: CircleCheck, partial: CircleDashed, team: Headset } as const;
+import {
+  CircleCheck,
+  CircleDashed,
+  Headset,
+  Info,
+  TriangleAlert,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
+import { findLevel, type LevelIconName } from "@/domain/taxonomy";
+
+export const LEVEL_ICON_COMPONENTS: Record<LevelIconName, LucideIcon> = {
+  "circle-check": CircleCheck,
+  "circle-dashed": CircleDashed,
+  headset: Headset,
+  "triangle-alert": TriangleAlert,
+  info: Info,
+  wrench: Wrench,
+};
 
 /** One level badge per topic (Constitution I). Shape + text, never color alone. */
-export function LevelBadge({ level }: { level: Level }) {
-  const Icon = ICONS[level];
+export function LevelBadge({ level }: { level: string }) {
+  const def = findLevel(useTaxonomy(), level);
+  const Icon = LEVEL_ICON_COMPONENTS[def.icon] ?? Info;
   return (
-    <Badge tone={level} icon={<Icon aria-hidden className="size-4" />}>
-      {th.levels[level]}
+    <Badge tone={def.tone} icon={<Icon aria-hidden className="size-4" />}>
+      {def.name}
     </Badge>
   );
 }

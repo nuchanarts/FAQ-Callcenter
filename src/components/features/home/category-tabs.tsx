@@ -1,13 +1,14 @@
 "use client";
 
-import { CATEGORIES, type CategoryId } from "@/domain/categories";
+import type { CategoryId } from "@/domain/categories";
 import { CategoryIcon } from "@/components/features/topic/category-icon";
+import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
 import { th } from "@/i18n/th";
 import { cn } from "@/lib/cn";
 
 interface CategoryTabsProps {
   value: CategoryId | null;
-  counts: Record<CategoryId, number>;
+  counts: Partial<Record<CategoryId, number>>;
   total: number;
   onChange: (value: CategoryId | null) => void;
 }
@@ -50,8 +51,9 @@ function Chip({
   );
 }
 
-/** The 8 fixed categories as filter chips with live counts (FR-003). Scrolls sideways on phones; a vertical menu from 1024 px. */
+/** The categories (editable at /admin/taxonomy) as filter chips with live counts (FR-003). Scrolls sideways on phones; a vertical menu from 1024 px. */
 export function CategoryTabs({ value, counts, total, onChange }: CategoryTabsProps) {
+  const { categories } = useTaxonomy();
   return (
     <div
       role="group"
@@ -61,12 +63,12 @@ export function CategoryTabs({ value, counts, total, onChange }: CategoryTabsPro
       <Chip pressed={value === null} onClick={() => onChange(null)} count={total}>
         {th.categories.all}
       </Chip>
-      {CATEGORIES.map((c) => (
+      {categories.map((c) => (
         <Chip
           key={c.id}
           pressed={value === c.id}
           onClick={() => onChange(value === c.id ? null : c.id)}
-          count={counts[c.id]}
+          count={counts[c.id] ?? 0}
         >
           <CategoryIcon name={c.icon} />
           {c.name}

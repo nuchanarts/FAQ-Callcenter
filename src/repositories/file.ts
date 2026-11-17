@@ -3,17 +3,19 @@ import { dirname } from "node:path";
 import type { StoredTopic } from "@/domain/topics";
 import {
   applyAdminUpsert,
+  applyTaxonomySave,
   applyUpsert,
   findAdminByEmail,
   findTopic,
   listTopics,
 } from "@/repositories/topic-store";
-import type { AdminUserRecord, Repositories } from "@/repositories/types";
+import type { AdminUserRecord, Repositories, StoredTaxonomy } from "@/repositories/types";
 
 interface FileShape {
   topics: StoredTopic[];
   /** Absent until an admin account is first changed; until then the seed admins apply. */
   admins?: AdminUserRecord[];
+  taxonomy?: StoredTaxonomy;
 }
 
 /**
@@ -33,6 +35,7 @@ export function createFileRepositories(opts: {
       return {
         topics: Array.isArray(data.topics) ? data.topics : [],
         admins: Array.isArray(data.admins) ? data.admins : undefined,
+        taxonomy: data.taxonomy,
       };
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { topics: [] };
@@ -63,6 +66,19 @@ export function createFileRepositories(opts: {
 
   return {
     backend: "file",
+    taxonomy: {
+      async get() {
+        return (await loadAll()).taxonomy ?? null;
+      },
+      save(taxonomy, expectedVersion) {
+        return serialized(async () => {
+          const current = await loadAll();
+          const next = applyTaxonomySave(current.taxonomy ?? null, taxonomy, expectedVersion);
+          await saveAll({ ...current, taxonomy: next });
+          return next;
+        });
+      },
+    },
     admins: {
       async findByEmail(email) {
         return findAdminByEmail(await loadAdmins(), email);

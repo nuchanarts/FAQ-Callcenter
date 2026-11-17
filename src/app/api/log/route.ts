@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { categoryName } from "@/domain/categories";
+import { categoryName } from "@/domain/taxonomy";
 import { parseReport, validateReport, type ReportInput } from "@/domain/report";
-import { topicService } from "@/services";
+import { taxonomyService, topicService } from "@/services";
 import { appendSheetRow } from "@/services/sheet-log";
 
 export const dynamic = "force-dynamic";
@@ -40,7 +40,8 @@ export async function POST(request: Request): Promise<Response> {
     // Only real, visible topics are logged (no free-text junk in the Sheet).
     const topic = await topicService().findPublicTopic(parsed.topicId);
     if (!topic) return new Response(null, { status: 400 });
-    await appendSheetRow("view", [topic.id, topic.title, categoryName(topic.categoryId)]);
+    const taxonomy = await taxonomyService().getTaxonomy();
+    await appendSheetRow("view", [topic.id, topic.title, categoryName(taxonomy, topic.categoryId)]);
     return new Response(null, { status: 202 });
   }
 

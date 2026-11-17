@@ -1,4 +1,5 @@
 import type { AdminRole } from "@/domain/permissions";
+import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic } from "@/domain/topics";
 
 export interface TopicRepository {
@@ -32,8 +33,22 @@ export interface AdminUserRepository {
   upsert(admin: AdminUserRecord): Promise<AdminUserRecord>;
 }
 
+/** The editable category/level set, stored as one versioned document. */
+export interface StoredTaxonomy {
+  taxonomy: Taxonomy;
+  version: number;
+}
+
+export interface TaxonomyRepository {
+  /** null = never saved (use the built-in default). */
+  get(): Promise<StoredTaxonomy | null>;
+  /** expectedVersion null = must not exist yet; otherwise must match. Throws ConflictError. */
+  save(taxonomy: Taxonomy, expectedVersion: number | null): Promise<StoredTaxonomy>;
+}
+
 export interface Repositories {
   backend: string;
   topics: TopicRepository;
   admins: AdminUserRepository;
+  taxonomy: TaxonomyRepository;
 }
