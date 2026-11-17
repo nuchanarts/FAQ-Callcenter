@@ -12,7 +12,7 @@ export const TOPIC_LIMITS = {
   url: 2000,
 } as const;
 
-export const ATTACHMENT_KINDS = ["clip", "manual", "link"] as const;
+export const ATTACHMENT_KINDS = ["clip", "manual", "link", "image"] as const;
 export type AttachmentKind = (typeof ATTACHMENT_KINDS)[number];
 
 const v = th.validation;

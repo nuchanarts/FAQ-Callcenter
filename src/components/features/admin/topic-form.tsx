@@ -11,6 +11,7 @@ import { Input, Select, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { AttachmentsEditor } from "@/components/features/admin/attachments-editor";
 import { ContentRenderer } from "@/components/features/topic/content-renderer";
+import { TopicImages } from "@/components/features/topic/topic-images";
 import { LevelBadge } from "@/components/features/topic/level-badge";
 import type { CategoryId } from "@/domain/categories";
 import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
@@ -28,10 +29,13 @@ const f = th.admin.form;
 export function TopicForm({
   topic,
   canPublish = true,
+  imagesEnabled = false,
 }: {
   topic?: EffectiveTopic;
   /** false = author: saving submits a draft for approval instead of publishing. */
   canPublish?: boolean;
+  /** Vercel Blob store connected: allow image uploads. */
+  imagesEnabled?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -205,6 +209,7 @@ export function TopicForm({
         </Field>
 
         <AttachmentsEditor
+          imagesEnabled={imagesEnabled}
           value={attachments}
           errors={error?.fieldErrors ?? {}}
           onChange={edit(setAttachments)}
@@ -234,6 +239,9 @@ export function TopicForm({
             <LevelBadge level={level} />
           </div>
           <ContentRenderer source={solution} />
+          <div className="mt-4">
+            <TopicImages images={attachments.filter((a) => a.kind === "image" && a.url)} />
+          </div>
         </div>
       </section>
     </form>

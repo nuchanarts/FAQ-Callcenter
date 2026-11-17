@@ -3,6 +3,7 @@ import { requireAdmin } from "@/auth/current-admin";
 import { TopicForm } from "@/components/features/admin/topic-form";
 import { canPublish } from "@/domain/permissions";
 import { th } from "@/i18n/th";
+import { imageUploadsEnabled } from "@/lib/images";
 
 export const metadata: Metadata = { title: th.admin.newTopic };
 
@@ -11,7 +12,7 @@ export default async function NewTopicPage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">{th.admin.newTopic}</h1>
-      <TopicForm canPublish={canPublish(admin)} />
+      <TopicForm canPublish={canPublish(admin)} imagesEnabled={imageUploadsEnabled()} />
     </div>
   );
 }

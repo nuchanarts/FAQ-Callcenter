@@ -6,6 +6,7 @@ import { TopicForm } from "@/components/features/admin/topic-form";
 import { NotFoundError } from "@/domain/errors";
 import { canPublish } from "@/domain/permissions";
 import { th } from "@/i18n/th";
+import { imageUploadsEnabled } from "@/lib/images";
 import { topicService } from "@/services";
 
 export const metadata: Metadata = { title: th.admin.editTopic };
@@ -24,7 +25,12 @@ export default async function EditTopicPage({ params }: { params: Promise<{ id: 
     <div className="flex flex-col gap-6">
       <h1 className="text-3xl font-bold">{th.admin.editTopic}</h1>
       <DraftReviewPanel key={`r-${topic.version}`} topic={topic} canPublish={publisher} />
-      <TopicForm key={`${topic.id}-${topic.version}`} topic={topic} canPublish={publisher} />
+      <TopicForm
+        key={`${topic.id}-${topic.version}`}
+        topic={topic}
+        canPublish={publisher}
+        imagesEnabled={imageUploadsEnabled()}
+      />
     </div>
   );
 }
