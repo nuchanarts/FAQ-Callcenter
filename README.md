@@ -99,6 +99,14 @@ audience = `GOOGLE_CLIENT_ID`, verified email) and allows only Gmail addresses a
 and kept active at `/admin/users`; everyone else is refused. No passwords are stored. Email +
 password login exists only for local development and E2E (`ALLOW_DEMO_ADMINS`).
 
+## Unit registry (report form auto-fill)
+
+Typing a 5-digit unit code on the report page fills "ชื่อหน่วยงาน" from the MOPH health-office
+registry via `/api/units/[code]` (server-side, ~41k units in `src/content/health-offices.json.gz`).
+To refresh it from a newer `health_office.xlsx`:
+`python scripts/build-health-offices.py <health_office.xlsx>` then gzip the JSON
+(`node -e "…"` as in the script header) and commit.
+
 ## Roles and FAQ approval
 
 | Role             | Can do                                                                       |

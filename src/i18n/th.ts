@@ -141,6 +141,16 @@ export const th = {
       anydesk: "ถ้ามี จะช่วยให้ทีมรีโมทแก้ได้ทันที",
       details: "บอกว่าทำอะไรอยู่ เห็นข้อความอะไร และลองแก้อะไรไปแล้ว",
     },
+    unitLookup: {
+      loading: "กำลังค้นหาชื่อหน่วยงาน…",
+      found: "พบหน่วยงาน:",
+      location: (tambon: string, amphoe: string, province: string) =>
+        [tambon && `ต.${tambon}`, amphoe && `อ.${amphoe}`, province && `จ.${province}`]
+          .filter(Boolean)
+          .join(" "),
+      inactive: "สถานะในทะเบียน: ยกเลิกแล้ว — ตรวจสอบรหัสอีกครั้ง",
+      notFound: "ไม่พบรหัสนี้ในทะเบียนหน่วยบริการ — ตรวจสอบรหัส หรือพิมพ์ชื่อหน่วยงานเอง",
+    },
     optional: "(ไม่บังคับ)",
     required: "จำเป็น",
     remember: "จำข้อมูลผู้แจ้งไว้ในเครื่องนี้",

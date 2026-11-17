@@ -111,6 +111,36 @@ describe("ReportForm", () => {
     ua.mockRestore();
   });
 
+  it("fills the unit name from a 5-digit unit code, keeping it editable", async () => {
+    const unit = {
+      code: "06157",
+      name: "รพ.สต.บ้านดอนธรรม",
+      tambon: "ใหม่พัฒนา",
+      amphoe: "เกาะคา",
+      province: "ลำปาง",
+      active: true,
+    };
+    const fetchMock = vi.fn(async (url: string) =>
+      url.endsWith("/06157")
+        ? Response.json(unit)
+        : Response.json({ error: "not_found" }, { status: 404 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    setup();
+    await userEvent.type(screen.getByLabelText(/รหัสหน่วยงาน 5 หลัก/), "06157");
+    expect(await screen.findByText(/พบหน่วยงาน/)).toBeInTheDocument();
+    expect(screen.getByText(/อ.เกาะคา จ.ลำปาง/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^ชื่อหน่วยงาน/)).toHaveValue("รพ.สต.บ้านดอนธรรม");
+    expect(fetchMock).toHaveBeenCalledWith("/api/units/06157");
+
+    const code = screen.getByLabelText(/รหัสหน่วยงาน 5 หลัก/);
+    await userEvent.clear(code);
+    await userEvent.type(code, "99998");
+    expect(await screen.findByText(/ไม่พบรหัสนี้/)).toBeInTheDocument();
+    vi.unstubAllGlobals();
+    Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
+  });
+
   it("remembers reporter fields (not details) only when ticked", async () => {
     setup();
     await fillReporter();

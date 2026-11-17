@@ -1,7 +1,15 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { MessageSquareText, ShieldCheck, Sparkles, UserRound } from "lucide-react";
+import {
+  CircleAlert,
+  CircleCheck,
+  LoaderCircle,
+  MessageSquareText,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
 import { Input, Textarea } from "@/components/ui/input";
@@ -22,6 +30,53 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { th } from "@/i18n/th";
 
 export const REPORTER_STORAGE_KEY = "bgs-faq.reporter";
+
+/** Shape returned by /api/units/[code] (src/services/unit-directory.ts). */
+interface HealthUnit {
+  code: string;
+  name: string;
+  tambon: string;
+  amphoe: string;
+  province: string;
+  active: boolean;
+}
+
+type UnitLookup =
+  { status: "idle" | "loading" | "notfound" } | { status: "found"; unit: HealthUnit };
+
+function UnitStatus({ lookup }: { lookup: UnitLookup }) {
+  const u = th.report.unitLookup;
+  if (lookup.status === "idle") return null;
+  if (lookup.status === "loading")
+    return (
+      <p role="status" className="-mt-2 flex items-center gap-2 text-[0.95rem] text-ink-faint">
+        <LoaderCircle aria-hidden className="size-4 animate-spin" />
+        {u.loading}
+      </p>
+    );
+  if (lookup.status === "notfound")
+    return (
+      <p role="status" className="-mt-2 flex items-start gap-2 text-[0.95rem] text-level-partial">
+        <CircleAlert aria-hidden className="mt-1 size-4 shrink-0" />
+        {u.notFound}
+      </p>
+    );
+  if (lookup.status !== "found") return null;
+  const { unit } = lookup;
+  return (
+    <p
+      role="status"
+      className="-mt-2 flex items-start gap-2 rounded-soft bg-herb-soft px-3 py-2 text-[0.95rem] text-ink"
+    >
+      <CircleCheck aria-hidden className="mt-1 size-4 shrink-0 text-herb" />
+      <span>
+        <span className="font-semibold">{u.found}</span> {unit.name} ·{" "}
+        {u.location(unit.tambon, unit.amphoe, unit.province)}
+        {!unit.active && <span className="font-semibold text-danger"> · {u.inactive}</span>}
+      </span>
+    </p>
+  );
+}
 
 type Reporter = Pick<ReportInput, (typeof REPORTER_FIELDS)[number]>;
 type Errors = Partial<Record<ReportField, string>>;
@@ -46,6 +101,10 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
   const [showSummary, setShowSummary] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const [unit, setUnit] = useState<UnitLookup>({ status: "idle" });
+  const lookupSeq = useRef(0);
+  /** The name we filled in automatically; replaced on the next lookup unless the user edited it. */
+  const autoName = useRef<string | null>(null);
 
   const defaults: ReportInput = {
     ...EMPTY_REPORT,
@@ -59,6 +118,31 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
     setEdits((e) => ({ ...e, [field]: value }));
     if (errors[field]) setErrors((errs) => ({ ...errs, [field]: undefined }));
     setMessage(null);
+    if (field === "unitCode") void lookupUnit(value);
+  }
+
+  /** 5-digit unit code → fill "ชื่อหน่วยงาน" from the MOPH registry (still editable). */
+  async function lookupUnit(raw: string) {
+    const seq = ++lookupSeq.current;
+    const code = raw.replace(/D/g, "");
+    if (code.length !== 5) return setUnit({ status: "idle" });
+    setUnit({ status: "loading" });
+    try {
+      const res = await fetch(`/api/units/${code}`);
+      if (seq !== lookupSeq.current) return; // a newer code was typed meanwhile
+      if (!res.ok) return setUnit({ status: "notfound" });
+      const found = (await res.json()) as HealthUnit;
+      setUnit({ status: "found", unit: found });
+      setEdits((e) => {
+        const current = e.unitName ?? defaults.unitName;
+        if (current.trim() && current !== autoName.current) return e; // keep what the user typed
+        autoName.current = found.name;
+        return { ...e, unitName: found.name };
+      });
+      setErrors((errs) => ({ ...errs, unitName: undefined }));
+    } catch {
+      if (seq === lookupSeq.current) setUnit({ status: "idle" });
+    }
   }
 
   function toggleRemember(checked: boolean) {
@@ -152,6 +236,7 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
             {text("unitCode", { hint: th.report.hints.unitCode, inputMode: "numeric" })}
             {text("unitName", { autoComplete: "organization" })}
           </div>
+          <UnitStatus lookup={unit} />
           <div className="grid gap-4 sm:grid-cols-2">
             {text("phone", { type: "tel", inputMode: "tel", autoComplete: "tel" })}
             {text("email", {
