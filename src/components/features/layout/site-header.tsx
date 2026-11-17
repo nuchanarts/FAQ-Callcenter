@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LifeBuoy, LockKeyhole, LogOut } from "lucide-react";
-import { getAdmin } from "@/auth/current-admin";
+import { getAdmin, OPEN_ACCESS_USER } from "@/auth/current-admin";
 import { signOutAction } from "@/app/actions/auth-actions";
 import { NavLinks } from "@/components/features/layout/nav-links";
 import { SkinPicker } from "@/components/features/layout/skin-picker";
@@ -40,7 +40,7 @@ export async function SiteHeader() {
               </span>
             </Link>
           )}
-          {admin && (
+          {admin && admin.id !== OPEN_ACCESS_USER.id && (
             <form action={signOutAction}>
               <button
                 type="submit"

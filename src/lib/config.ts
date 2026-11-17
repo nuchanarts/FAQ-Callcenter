@@ -16,6 +16,11 @@ export interface AppConfig {
   googleClientId: string;
   /** Email + password login: local development, E2E, or temporarily via STAFF_PASSWORD_LOGIN. */
   passwordLogin: boolean;
+  /**
+   * TEMPORARY: every visitor is treated as an owner (no sign-in). Only for the period before
+   * sign-in is set up — anyone on the internet can change content while this is on.
+   */
+  openAdminAccess: boolean;
   /** One owner account from env (STAFF_OWNER_*), e.g. to use the admin area before Google Sign-In. */
   staffOwner?: { email: string; displayName: string; passwordHash: string };
   supabase?: { url: string; serviceRoleKey: string };
@@ -52,9 +57,11 @@ export function readConfig(env: Env = process.env): AppConfig {
     dataFile: env.DATA_FILE ?? ".data/db.json",
     allowDemoAdmins: !isProduction || env.ALLOW_DEMO_ADMINS === "true",
     googleClientId: env.GOOGLE_CLIENT_ID?.trim() ?? "",
+    openAdminAccess: false,
     passwordLogin:
       !isProduction || env.ALLOW_DEMO_ADMINS === "true" || env.STAFF_PASSWORD_LOGIN === "true",
   };
+  config.openAdminAccess = env.OPEN_ADMIN_ACCESS === "true";
   const ownerEmail = env.STAFF_OWNER_EMAIL?.trim().toLowerCase();
   const ownerHash = env.STAFF_OWNER_PASSWORD_HASH?.trim();
   if (ownerEmail && ownerHash) {
