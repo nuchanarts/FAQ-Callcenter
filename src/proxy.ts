@@ -12,7 +12,8 @@ export const PATHNAME_HEADER = "x-bgs-pathname";
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname + request.nextUrl.search;
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
-  if (!session) {
+  // OPEN_ADMIN_ACCESS (temporary testing mode): no sign-in, the admin layout handles access.
+  if (!session && process.env.OPEN_ADMIN_ACCESS !== "true") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(path)}`;
