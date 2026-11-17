@@ -29,9 +29,19 @@ async function fillReporter() {
   await userEvent.type(screen.getByLabelText(/รหัสหน่วยงาน 5 หลัก/), "03562");
   await userEvent.type(screen.getByLabelText(/ชื่อหน่วยงาน/), "รพ.สต.ตัวอย่าง");
   await userEvent.type(screen.getByLabelText(/เบอร์ติดต่อ/), "0812345678");
+  await userEvent.type(screen.getByLabelText(/เลข AnyDesk/), "123456789");
 }
 
 describe("ReportForm", () => {
+  it("suggests public-health positions but accepts any typed title", async () => {
+    setup();
+    const position = screen.getByLabelText(/ตำแหน่งงาน/);
+    expect(position).toHaveAttribute("list", "position-options");
+    expect(document.querySelectorAll("#position-options option").length).toBeGreaterThan(10);
+    await userEvent.type(position, "ตำแหน่งอื่น");
+    expect(position).toHaveValue("ตำแหน่งอื่น");
+  });
+
   it("prefills details from the topic", () => {
     setup({ topicTitle: "ขอ Authen Code ไม่ได้" });
     expect(screen.getByLabelText(/^รายละเอียดปัญหา/)).toHaveValue("[หัวข้อ] ขอ Authen Code ไม่ได้\n");
@@ -134,9 +144,17 @@ describe("ReportForm", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/units/06157");
 
     const code = screen.getByLabelText(/รหัสหน่วยงาน 5 หลัก/);
+    // Removing the code removes the name we filled in.
     await userEvent.clear(code);
+    expect(screen.getByLabelText(/^ชื่อหน่วยงาน/)).toHaveValue("");
+
     await userEvent.type(code, "99998");
     expect(await screen.findByText(/ไม่พบรหัสนี้/)).toBeInTheDocument();
+
+    // A name the caller typed is never cleared.
+    await userEvent.type(screen.getByLabelText(/^ชื่อหน่วยงาน/), "พิมพ์เอง");
+    await userEvent.clear(code);
+    expect(screen.getByLabelText(/^ชื่อหน่วยงาน/)).toHaveValue("พิมพ์เอง");
     vi.unstubAllGlobals();
     Object.defineProperty(navigator, "clipboard", { value: { writeText }, configurable: true });
   });

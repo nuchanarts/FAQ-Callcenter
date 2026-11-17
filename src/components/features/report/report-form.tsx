@@ -26,6 +26,7 @@ import {
   type ReportField,
   type ReportInput,
 } from "@/domain/report";
+import { POSITIONS } from "@/domain/positions";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { th } from "@/i18n/th";
 
@@ -121,16 +122,30 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
     if (field === "unitCode") void lookupUnit(value);
   }
 
+  /** Code removed/changed to an unknown one: drop the name we filled in (never a typed one). */
+  function clearAutoName() {
+    const filled = autoName.current;
+    if (!filled) return;
+    autoName.current = null;
+    setEdits((e) => ((e.unitName ?? defaults.unitName) === filled ? { ...e, unitName: "" } : e));
+  }
+
   /** 5-digit unit code → fill "ชื่อหน่วยงาน" from the MOPH registry (still editable). */
   async function lookupUnit(raw: string) {
     const seq = ++lookupSeq.current;
-    const code = raw.replace(/D/g, "");
-    if (code.length !== 5) return setUnit({ status: "idle" });
+    const code = raw.replace(/\D/g, "");
+    if (code.length !== 5) {
+      clearAutoName();
+      return setUnit({ status: "idle" });
+    }
     setUnit({ status: "loading" });
     try {
       const res = await fetch(`/api/units/${code}`);
       if (seq !== lookupSeq.current) return; // a newer code was typed meanwhile
-      if (!res.ok) return setUnit({ status: "notfound" });
+      if (!res.ok) {
+        clearAutoName();
+        return setUnit({ status: "notfound" });
+      }
       const found = (await res.json()) as HealthUnit;
       setUnit({ status: "found", unit: found });
       setEdits((e) => {
@@ -175,6 +190,8 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
       inputMode?: "numeric" | "tel" | "email";
       type?: string;
       autoComplete?: string;
+      /** Suggestions shown as a dropdown; any other value can still be typed. */
+      suggestions?: readonly string[];
     } = {},
   ) => (
     <Field
@@ -191,6 +208,7 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           type={opts.type ?? "text"}
           inputMode={opts.inputMode}
           autoComplete={opts.autoComplete}
+          list={opts.suggestions ? `${field}-options` : undefined}
           value={values[field]}
           onChange={(e) => update(field, e.target.value)}
         />
@@ -230,7 +248,16 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
           </div>
           <div className="grid gap-4 xl:grid-cols-2">
             {text("fullName", { autoComplete: "name" })}
-            {text("position", { autoComplete: "organization-title" })}
+            {text("position", {
+              autoComplete: "off",
+              hint: th.report.hints.position,
+              suggestions: POSITIONS,
+            })}
+            <datalist id="position-options">
+              {POSITIONS.map((p) => (
+                <option key={p} value={p} />
+              ))}
+            </datalist>
           </div>
           <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
             {text("unitCode", { hint: th.report.hints.unitCode, inputMode: "numeric" })}
@@ -246,7 +273,7 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
               autoComplete: "email",
             })}
           </div>
-          {text("anydesk", { optional: true, hint: th.report.hints.anydesk, inputMode: "numeric" })}
+          {text("anydesk", { hint: th.report.hints.anydesk, inputMode: "numeric" })}
           <label className="flex items-start gap-3 rounded-soft border border-line bg-surface px-4 py-3">
             <input
               type="checkbox"

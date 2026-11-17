@@ -17,7 +17,7 @@ const valid: ReportInput = {
   unitName: "รพ.สต.บ้านตัวอย่าง",
   phone: "081-234-5678",
   email: "",
-  anydesk: "",
+  anydesk: "123456789",
   details: "[หัวข้อ] ขอ Authen Code ไม่ได้\nเสียบบัตรแล้วไม่ขึ้น",
 };
 
@@ -35,6 +35,7 @@ describe("report validation (Constitution III)", () => {
     ["phone", { phone: "1".repeat(16) }],
     ["email", { email: "not-an-email" }],
     ["anydesk", { anydesk: "12345" }],
+    ["anydesk", { anydesk: "" }],
     ["details", { details: "" }],
     ["details", { details: "x".repeat(2001) }],
     ["fullName", { fullName: "x".repeat(101) }],
@@ -49,7 +50,7 @@ describe("report validation (Constitution III)", () => {
     expect(r.anydesk).toBe("123 456 789");
   });
 
-  it("accepts optional email and AnyDesk when empty", () => {
+  it("accepts an empty optional email (AnyDesk is required)", () => {
     expect(validateReport(valid)).toEqual({});
   });
 
@@ -59,7 +60,7 @@ describe("report validation (Constitution III)", () => {
 });
 
 describe("formatReportMessage", () => {
-  it("produces the exact standard template, '-' for empty optional fields", () => {
+  it("produces the exact standard template, '-' for an empty email", () => {
     expect(formatReportMessage(parseReport(valid))).toBe(
       [
         "ชื่อ - สกุล ผู้แจ้ง: สมใจ ใจดี",
@@ -68,7 +69,7 @@ describe("formatReportMessage", () => {
         "ชื่อหน่วยงาน : รพ.สต.บ้านตัวอย่าง",
         "เบอร์ติดต่อ : 081-234-5678",
         "อีเมล : -",
-        "เลข AnyDesk : -",
+        "เลข AnyDesk : 123456789",
         "รายละเอียดปัญหา : [หัวข้อ] ขอ Authen Code ไม่ได้\nเสียบบัตรแล้วไม่ขึ้น",
       ].join("\n"),
     );

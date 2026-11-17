@@ -54,13 +54,12 @@ const reportSchema = z.object({
     .string()
     .trim()
     .refine((s) => s === "" || z.email().safeParse(s).success, v.email),
+  // Required: the team connects remotely to fix most problems (AnyDesk id = 9–10 digits).
   anydesk: z
     .string()
     .trim()
-    .refine(
-      (s) => s === "" || (/^[\d\s-]+$/.test(s) && [9, 10].includes(digits(s).length)),
-      v.anydesk,
-    ),
+    .min(1, v.required)
+    .refine((s) => /^[\d\s-]+$/.test(s) && [9, 10].includes(digits(s).length), v.anydesk),
   details: requiredText(REPORT_LIMITS.details),
 });
 
