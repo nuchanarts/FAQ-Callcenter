@@ -104,8 +104,7 @@ password login exists only for local development and E2E (`ALLOW_DEMO_ADMINS`).
 Typing a 5-digit unit code on the report page fills "ชื่อหน่วยงาน" from the MOPH health-office
 registry via `/api/units/[code]` (server-side, ~41k units in `src/content/health-offices.json.gz`).
 To refresh it from a newer `health_office.xlsx`:
-`python scripts/build-health-offices.py <health_office.xlsx>` then gzip the JSON
-(`node -e "…"` as in the script header) and commit.
+`python scripts/build-health-offices.py <health_office.xlsx>`, then commit the regenerated file.
 
 ## Roles and FAQ approval
 

@@ -1,12 +1,13 @@
-"""Build src/content/health-offices.json from the MOPH health-office registry (health_office.xlsx).
+"""Build src/content/health-offices.json.gz from the MOPH health-office registry (health_office.xlsx).
 
 Usage:  python scripts/build-health-offices.py <path/to/health_office.xlsx>
 
 Keeps only what the report form needs, keyed by the 5-digit unit code:
   { "06157": ["<name>", "<tambon>", "<amphoe>", "<province>", <active 1/0>], ... }
 When a code appears more than once, an active record wins over a cancelled one.
-Re-run after downloading a newer registry; commit the regenerated JSON.
+Re-run after downloading a newer registry; commit the regenerated .json.gz.
 """
+import gzip
 import json
 import sys
 from pathlib import Path
@@ -14,7 +15,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 
 src = Path(sys.argv[1])
-out = Path(__file__).resolve().parent.parent / "src" / "content" / "health-offices.json"
+out = Path(__file__).resolve().parent.parent / "src" / "content" / "health-offices.json.gz"
 
 wb = load_workbook(src, read_only=True, data_only=True)
 rows = wb.worksheets[0].iter_rows(values_only=True)
@@ -41,8 +42,6 @@ for row in rows:
     if code not in units or (active and not units[code][4]):
         units[code] = record
 
-out.write_text(
-    json.dumps(dict(sorted(units.items())), ensure_ascii=False, separators=(",", ":")),
-    encoding="utf-8",
-)
+data = json.dumps(dict(sorted(units.items())), ensure_ascii=False, separators=(",", ":"))
+out.write_bytes(gzip.compress(data.encode("utf-8"), compresslevel=9, mtime=0))
 print(f"{len(units)} units -> {out} ({out.stat().st_size / 1_000_000:.1f} MB)")
