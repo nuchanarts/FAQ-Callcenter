@@ -49,3 +49,31 @@ describe("HelpfulFeedback", () => {
     expect(sent()).toHaveLength(1);
   });
 });
+
+describe("HelpfulFeedback inside the wide answer pane", () => {
+  it("switching to another topic shows that topic's own question, not the previous vote", async () => {
+    const { TopicDetail } = await import("@/components/features/topic/topic-detail");
+    const t = (id: string) => ({
+      id,
+      origin: "base" as const,
+      status: "original" as const,
+      hidden: false,
+      order: 0,
+      version: 0,
+      published: true,
+      draft: null,
+      deleted: false,
+      title: id,
+      categoryId: "login",
+      level: "self",
+      keywords: [],
+      solution: "1. ก",
+      attachments: [],
+    });
+    const { rerender } = render(<TopicDetail topic={t("hf-pane-a")} />);
+    await userEvent.click(screen.getByRole("button", { name: "ได้ผล" }));
+    rerender(<TopicDetail topic={t("hf-pane-b")} />);
+    expect(screen.getByRole("button", { name: "ได้ผล" })).toBeInTheDocument();
+    expect(screen.queryByText("ขอบคุณที่ช่วยบอก — ดีใจที่แก้ได้แล้ว")).toBeNull();
+  });
+});

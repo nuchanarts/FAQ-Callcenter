@@ -101,4 +101,26 @@ describe("stats service", () => {
       degraded: true,
     });
   });
+
+  it("getViewCounts serves the last good counts when the store fails later", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { stats, service, advance } = setup();
+    await stats.increment({ day: "2026-11-18", kind: "view", topicId: "b-1" });
+    expect(await service.getViewCounts()).toEqual({ "b-1": 1 });
+    advance(61_000);
+    vi.spyOn(stats, "list").mockRejectedValue(new Error("down"));
+    expect(await service.getViewCounts()).toEqual({ "b-1": 1 });
+  });
+
+  it("getViewCounts does not retry a failing store for 60 s", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const { stats, service, advance } = setup();
+    const list = vi.spyOn(stats, "list").mockRejectedValue(new Error("down"));
+    await service.getViewCounts();
+    await service.getViewCounts();
+    expect(list).toHaveBeenCalledTimes(1);
+    advance(61_000);
+    await service.getViewCounts();
+    expect(list).toHaveBeenCalledTimes(2);
+  });
 });

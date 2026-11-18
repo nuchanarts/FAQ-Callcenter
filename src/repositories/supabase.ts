@@ -82,6 +82,9 @@ const toAdminRow = (a: AdminUserRecord): AdminRow => ({
  * Admin passwords are verified by the app (scrypt) so sessions behave the same on every backend.
  * Schema + RLS: supabase/migrations/0001_init.sql … 0006_usage.sql.
  */
+/** Rows per request when reading usage counters (≤ the API's max-rows, 1000 by default). */
+const USAGE_PAGE = 1000;
+
 export function createSupabaseRepositories(opts: {
   url: string;
   serviceRoleKey: string;
@@ -103,18 +106,29 @@ export function createSupabaseRepositories(opts: {
         if (error) throw error;
       },
       async list(sinceDay) {
-        let query = db.from("usage_daily").select("day, kind, topic_id, count");
-        if (sinceDay) query = query.gte("day", sinceDay);
-        const { data, error } = await query;
-        if (error) throw error;
-        return (data as { day: string; kind: string; topic_id: string; count: number }[]).map(
-          (r): UsageCount => ({
-            day: r.day,
-            kind: r.kind as UsageKind,
-            topicId: r.topic_id,
-            count: r.count,
-          }),
-        );
+        // The API returns at most ~1000 rows per request: page through, in a stable order.
+        const out: UsageCount[] = [];
+        for (let from = 0; ; from += USAGE_PAGE) {
+          let query = db
+            .from("usage_daily")
+            .select("day, kind, topic_id, count")
+            .order("day")
+            .order("kind")
+            .order("topic_id");
+          if (sinceDay) query = query.gte("day", sinceDay);
+          const { data, error } = await query.range(from, from + USAGE_PAGE - 1);
+          if (error) throw error;
+          const rows = data as { day: string; kind: string; topic_id: string; count: number }[];
+          for (const r of rows) {
+            out.push({
+              day: r.day,
+              kind: r.kind as UsageKind,
+              topicId: r.topic_id,
+              count: r.count,
+            });
+          }
+          if (rows.length < USAGE_PAGE) return out;
+        }
       },
     },
     topics: {

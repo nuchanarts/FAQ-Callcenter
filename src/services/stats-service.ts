@@ -64,7 +64,11 @@ export function createStatsService(deps: {
       return counts;
     } catch (err) {
       console.error("[stats] view counts:", err instanceof Error ? err.message : err);
-      return {};
+      // Keep serving the last good counts, and don't hit a failing (possibly slow) store
+      // again for a whole TTL: the home page must never wait on it render after render.
+      const counts = cache.current?.counts ?? {};
+      cache.current = { at, counts };
+      return counts;
     }
   }
 

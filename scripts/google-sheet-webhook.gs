@@ -187,7 +187,15 @@ function upsertAdmin(row) {
 
 var USAGE_KINDS = ["view", "report", "visit", "helpful", "unhelpful"];
 
-/** +1 on the (day, kind, topic_id) row; runs under the script lock taken in doPost. */
+/** Rows read from the bottom of "usage_daily" when looking for today's counter. */
+var USAGE_TAIL_ROWS = 500;
+
+/**
+ * +1 on the (day, kind, topic_id) row; runs under the script lock taken in doPost.
+ * Rows are appended day by day, so today's counters sit at the bottom: only the last
+ * USAGE_TAIL_ROWS rows are read (never the whole tab, which grows forever). If a counter is
+ * not found there a new row is added — a duplicate key is harmless because readers sum rows.
+ */
 function incrementUsage(body) {
   var day = String(body.day || "");
   var kind = String(body.kind || "");
@@ -197,11 +205,18 @@ function incrementUsage(body) {
   }
   var tab = DATA_TABS.usage;
   var sheet = ensureSheet(tab, true);
-  var values = sheet.getDataRange().getValues();
-  for (var r = 1; r < values.length; r++) {
-    if (String(values[r][0]) === day && String(values[r][1]) === kind && String(values[r][2]) === topicId) {
-      writeRow(tab, r + 1, { day: day, kind: kind, topic_id: topicId, count: String(Number(values[r][3]) + 1) });
-      return { ok: true };
+  var last = sheet.getLastRow();
+  var first = Math.max(2, last - USAGE_TAIL_ROWS + 1);
+  if (last >= first) {
+    var values = sheet.getRange(first, 1, last - first + 1, 4).getValues();
+    for (var i = values.length - 1; i >= 0; i--) {
+      var rowDay = String(values[i][0]);
+      if (rowDay < day) break; // older days only from here up
+      if (rowDay === day && String(values[i][1]) === kind && String(values[i][2]) === topicId) {
+        var count = (Number(values[i][3]) || 0) + 1;
+        writeRow(tab, first + i, { day: day, kind: kind, topic_id: topicId, count: String(count) });
+        return { ok: true };
+      }
     }
   }
   writeRow(tab, null, { day: day, kind: kind, topic_id: topicId, count: "1" });

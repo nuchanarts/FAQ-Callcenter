@@ -31,6 +31,8 @@ import { th } from "@/i18n/th";
 
 const URL_SYNC_MS = 300;
 const NO_COUNTS: Record<string, number> = {};
+/** Wide screens show an answer without a click; it counts as a view once it stays this long. */
+const AUTO_VIEW_MS = 1500;
 
 interface HomeScreenProps {
   topics: EffectiveTopic[];
@@ -100,6 +102,15 @@ export function HomeScreen({
   const searching = normalizeQuery(deferredQuery) !== "";
 
   const selected = results.find((t) => t.id === selectedId) ?? results[0];
+
+  // Wide screens: the answer pane shows a topic without a click (e.g. the first search result).
+  // Count it once it has stayed on screen, so typing past intermediate results doesn't count.
+  const shownId = wide ? selected?.id : undefined;
+  useEffect(() => {
+    if (!shownId) return;
+    const timer = setTimeout(() => logTopicView(shownId), AUTO_VIEW_MS);
+    return () => clearTimeout(timer);
+  }, [shownId]);
 
   const popularIds = useMemo(
     () => new Set(rankPopular(topics, viewCounts, POPULAR_BADGE_LIMIT).map((t) => t.id)),

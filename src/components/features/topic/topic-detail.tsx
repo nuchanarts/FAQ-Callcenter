@@ -51,7 +51,8 @@ export function TopicDetail({ topic }: { topic: EffectiveTopic }) {
         </div>
       )}
 
-      <HelpfulFeedback topicId={topic.id} />
+      {/* key: a new topic in the same pane must not inherit the previous topic's vote */}
+      <HelpfulFeedback key={topic.id} topicId={topic.id} />
     </div>
   );
 }
