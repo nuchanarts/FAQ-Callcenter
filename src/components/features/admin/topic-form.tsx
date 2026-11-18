@@ -10,14 +10,21 @@ import { Field } from "@/components/ui/field";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { AttachmentsEditor } from "@/components/features/admin/attachments-editor";
+import { SymptomImageEditor } from "@/components/features/admin/symptom-image-editor";
 import { ContentRenderer } from "@/components/features/topic/content-renderer";
+import { SymptomImage } from "@/components/features/topic/symptom-image";
 import { TopicImages } from "@/components/features/topic/topic-images";
 import { LevelBadge } from "@/components/features/topic/level-badge";
 import type { CategoryId } from "@/domain/categories";
 import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
 import type { ActionError } from "@/domain/errors";
 import type { Level } from "@/domain/levels";
-import { parseKeywords, TOPIC_LIMITS, type Attachment } from "@/domain/topic";
+import {
+  parseKeywords,
+  TOPIC_LIMITS,
+  type Attachment,
+  type SymptomImage as SymptomImageValue,
+} from "@/domain/topic";
 import type { EffectiveTopic } from "@/domain/topics";
 import { useUnsavedChanges } from "@/hooks/use-unsaved-changes";
 import { th } from "@/i18n/th";
@@ -48,6 +55,9 @@ export function TopicForm({
   const [keywords, setKeywords] = useState(start?.keywords.join(", ") ?? "");
   const [solution, setSolution] = useState(start?.solution ?? "");
   const [attachments, setAttachments] = useState<Attachment[]>(start?.attachments ?? []);
+  const [symptomImage, setSymptomImage] = useState<SymptomImageValue | null>(
+    start?.symptomImage ?? null,
+  );
   const [error, setError] = useState<ActionError | null>(null);
   const [pending, setPending] = useState(false);
   const [dirty, setDirty] = useState(false);
@@ -72,6 +82,7 @@ export function TopicForm({
       keywords: parseKeywords(keywords),
       solution,
       attachments,
+      symptomImage,
     };
     try {
       const result = topic
@@ -139,6 +150,13 @@ export function TopicForm({
             />
           )}
         </Field>
+
+        <SymptomImageEditor
+          value={symptomImage}
+          onChange={edit(setSymptomImage)}
+          imagesEnabled={imagesEnabled}
+          error={fieldError("symptomImage.url") ?? fieldError("symptomImage.caption")}
+        />
 
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label={f.category} error={fieldError("categoryId")} required>
@@ -238,6 +256,11 @@ export function TopicForm({
           <div className="mt-1.5 mb-4">
             <LevelBadge level={level} />
           </div>
+          {symptomImage && (
+            <div className="mb-4">
+              <SymptomImage image={symptomImage} title={title || f.title} />
+            </div>
+          )}
           <ContentRenderer source={solution} />
           <div className="mt-4">
             <TopicImages images={attachments.filter((a) => a.kind === "image" && a.url)} />

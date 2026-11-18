@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
 import { ImagePlus, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -9,6 +8,7 @@ import { Input, Select } from "@/components/ui/input";
 import { ATTACHMENT_KINDS, TOPIC_LIMITS, type Attachment } from "@/domain/topic";
 import { th } from "@/i18n/th";
 import { IMAGE_MAX_BYTES, IMAGE_TYPES } from "@/lib/images";
+import { uploadImage } from "@/lib/upload-image";
 
 const f = th.admin.form;
 
@@ -44,11 +44,8 @@ export function AttachmentsEditor({
     try {
       const added: Attachment[] = [];
       for (const file of picked) {
-        const blob = await upload(`faq/${file.name}`, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-        });
-        added.push({ kind: "image", label: file.name.replace(/.[^.]+$/, ""), url: blob.url });
+        const url = await uploadImage(file);
+        added.push({ kind: "image", label: file.name.replace(/.[^.]+$/, ""), url });
       }
       onChange([...value, ...added]);
     } catch {
