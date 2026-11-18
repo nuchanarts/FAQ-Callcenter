@@ -2,10 +2,19 @@
  * Centralized Thai UI strings (Constitution IV, X).
  * Every user-facing string lives here — components must not inline literals.
  */
-/** Joins words so the browser never breaks a line between them (Thai has no spaces). */
+/**
+ * Keeps a phrase on one line. Thai has no spaces, so browsers split words with a
+ * dictionary (e.g. "\u0e44\u0e21\u0e48\u0e40\u0e01\u0e34\u0e19" \u2192 "\u0e44\u0e21\u0e48|\u0e40\u0e01\u0e34\u0e19"); a word joiner between every grapheme
+ * cluster forbids any break inside the phrase, and spaces become no-break spaces.
+ */
 const WORD_JOINER = "\u2060";
 const NO_BREAK_SPACE = "\u00a0";
-const nb = (...words: string[]) => words.join(WORD_JOINER).replaceAll(" ", NO_BREAK_SPACE);
+const graphemes = new Intl.Segmenter("th", { granularity: "grapheme" });
+const nb = (...words: string[]) =>
+  Array.from(
+    graphemes.segment(words.join("").replaceAll(" ", NO_BREAK_SPACE)),
+    (s) => s.segment,
+  ).join(WORD_JOINER);
 
 export const th = {
   app: {
@@ -125,6 +134,33 @@ export const th = {
       neutral: "เทา",
       danger: "แดง",
     },
+    /** Thai names for the icon choices (the stored value stays the English icon id). */
+    iconNames: {
+      "log-in": "ลูกศรเข้าระบบ",
+      "id-card": "บัตรประชาชน",
+      upload: "ส่งออก / อัปโหลด",
+      printer: "เครื่องพิมพ์",
+      pill: "ยาเม็ด",
+      stethoscope: "หูฟังแพทย์",
+      wallet: "กระเป๋าเงิน",
+      "clipboard-list": "แบบฟอร์ม / รายการ",
+      monitor: "หน้าจอคอมพิวเตอร์",
+      wifi: "สัญญาณ Wi-Fi",
+      database: "ฐานข้อมูล",
+      settings: "ตั้งค่า (เฟือง)",
+      "file-text": "เอกสาร",
+      calendar: "ปฏิทิน / นัดหมาย",
+      users: "กลุ่มคน / ผู้ใช้",
+      syringe: "เข็มฉีดยา",
+      receipt: "ใบเสร็จ",
+      "circle-help": "เครื่องหมายคำถาม",
+      "circle-check": "เครื่องหมายถูก",
+      "circle-dashed": "วงกลมเส้นประ",
+      headset: "หูฟังคอลเซ็นเตอร์",
+      "triangle-alert": "สามเหลี่ยมเตือน",
+      info: "ข้อมูล (ตัว i)",
+      wrench: "ประแจซ่อม",
+    } as Record<string, string>,
   },
   levels: {
     self: "ทำเองได้",

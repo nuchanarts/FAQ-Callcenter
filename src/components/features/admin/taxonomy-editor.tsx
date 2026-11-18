@@ -21,6 +21,11 @@ import { th } from "@/i18n/th";
 
 const t = th.taxonomy;
 
+/** Thai name shown in the icon dropdowns; the stored value stays the icon id. */
+const iconName = (icon: string) => t.iconNames[icon] ?? icon;
+/** Hover text: Thai name plus the icon id, for admins who know the English names. */
+const iconTitle = (icon: string) => `${iconName(icon)} (${icon})`;
+
 interface Props {
   initial: {
     taxonomy: Taxonomy;
@@ -78,7 +83,7 @@ export function TaxonomyEditor({ initial }: Props) {
             return (
               <li
                 key={c.id || `new-${i}`}
-                className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2 rounded-soft border border-line bg-surface p-3 md:grid-cols-[2.5rem_minmax(0,1fr)_11rem_auto_auto]"
+                className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2 rounded-soft border border-line bg-surface p-3 md:grid-cols-[2.5rem_minmax(0,1fr)_14rem_auto_auto]"
               >
                 <span className="flex size-10 items-center justify-center rounded-soft bg-herb-soft text-herb">
                   <CategoryIcon name={c.icon} className="size-5" />
@@ -91,12 +96,13 @@ export function TaxonomyEditor({ initial }: Props) {
                 />
                 <Select
                   aria-label={`${t.icon} ${c.name}`}
+                  title={iconTitle(c.icon)}
                   value={c.icon}
                   onChange={(e) => update({ icon: e.target.value as CategoryDef["icon"] })}
                 >
                   {CATEGORY_ICONS.map((icon) => (
-                    <option key={icon} value={icon}>
-                      {icon}
+                    <option key={icon} value={icon} title={iconTitle(icon)}>
+                      {iconName(icon)}
                     </option>
                   ))}
                 </Select>
@@ -138,7 +144,7 @@ export function TaxonomyEditor({ initial }: Props) {
             return (
               <li
                 key={l.id || `new-${i}`}
-                className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2 rounded-soft border border-line bg-surface p-3 md:grid-cols-[2.5rem_minmax(0,1fr)_11rem_auto_auto]"
+                className="grid grid-cols-[2.5rem_minmax(0,1fr)] items-center gap-2 rounded-soft border border-line bg-surface p-3 md:grid-cols-[2.5rem_minmax(0,1fr)_20rem_auto_auto]"
               >
                 <span className="flex size-10 items-center justify-center" title={l.name}>
                   <Badge tone={l.tone} icon={<Icon aria-hidden className="size-4" />}>
@@ -151,7 +157,7 @@ export function TaxonomyEditor({ initial }: Props) {
                   maxLength={60}
                   onChange={(e) => update({ name: e.target.value })}
                 />
-                <span className="grid grid-cols-2 gap-2">
+                <span className="col-span-2 grid grid-cols-[8rem_minmax(0,1fr)] gap-2 md:col-span-1">
                   <Select
                     aria-label={`${t.tone} ${l.name}`}
                     value={l.tone}
@@ -165,12 +171,13 @@ export function TaxonomyEditor({ initial }: Props) {
                   </Select>
                   <Select
                     aria-label={`${t.icon} ${l.name}`}
+                    title={iconTitle(l.icon)}
                     value={l.icon}
                     onChange={(e) => update({ icon: e.target.value as LevelDef["icon"] })}
                   >
                     {LEVEL_ICONS.map((icon) => (
-                      <option key={icon} value={icon}>
-                        {icon}
+                      <option key={icon} value={icon} title={iconTitle(icon)}>
+                        {iconName(icon)}
                       </option>
                     ))}
                   </Select>
