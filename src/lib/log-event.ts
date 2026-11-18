@@ -25,6 +25,19 @@ export function logEvent(event: LogEvent): void {
 }
 
 const viewedThisVisit = new Set<string>();
+const votesThisVisit = new Map<string, "helpful" | "unhelpful">();
+
+/** The vote already given for this topic during this page visit, if any. */
+export function topicVote(topicId: string): "helpful" | "unhelpful" | undefined {
+  return votesThisVisit.get(topicId);
+}
+
+/** Logs "did this fix it?" once per topic per page visit. */
+export function logTopicVote(topicId: string, vote: "helpful" | "unhelpful"): void {
+  if (votesThisVisit.has(topicId)) return;
+  votesThisVisit.set(topicId, vote);
+  logEvent({ kind: vote, topicId });
+}
 
 /** Logs a topic view once per topic per page visit (re-opening the same card doesn't recount). */
 export function logTopicView(topicId: string): void {
