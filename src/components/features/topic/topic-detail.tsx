@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ExternalLink, FileText, MessageSquareWarning, PlayCircle } from "lucide-react";
 import { buttonClass } from "@/components/ui/button";
 import { ContentRenderer } from "@/components/features/topic/content-renderer";
+import { SymptomImage } from "@/components/features/topic/symptom-image";
 import { TopicImages } from "@/components/features/topic/topic-images";
 import type { EffectiveTopic } from "@/domain/topics";
 import { th } from "@/i18n/th";
@@ -22,6 +23,7 @@ export function TopicDetail({ topic }: { topic: EffectiveTopic }) {
   const links = topic.attachments.filter((a) => a.kind !== "image");
   return (
     <div className="flex flex-col gap-5">
+      {topic.symptomImage && <SymptomImage image={topic.symptomImage} title={topic.title} />}
       <ContentRenderer source={topic.solution} />
 
       <TopicImages images={images} />

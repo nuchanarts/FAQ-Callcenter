@@ -4,6 +4,7 @@ import { useId, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { CategoryIcon } from "@/components/features/topic/category-icon";
 import { LevelBadge } from "@/components/features/topic/level-badge";
+import { SymptomThumb } from "@/components/features/topic/symptom-image";
 import { TopicDetail } from "@/components/features/topic/topic-detail";
 import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
 import { findCategory } from "@/domain/taxonomy";
@@ -78,6 +79,7 @@ export function TopicCard({
               : "xl:border-transparent xl:hover:bg-surface-muted",
           )}
         >
+          {topic.symptomImage && <SymptomThumb image={topic.symptomImage} />}
           <span className="flex-1">
             <span
               className={cn("block group-hover:text-herb", highlighted ? "text-herb" : "text-ink")}
