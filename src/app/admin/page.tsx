@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus, Tags, UsersRound } from "lucide-react";
+import { BarChart3, Plus, Tags, UsersRound } from "lucide-react";
 import { requireAdmin } from "@/auth/current-admin";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
@@ -30,6 +30,10 @@ export default async function AdminPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link href="/admin/stats" className={buttonClass("secondary", "md")}>
+            <BarChart3 aria-hidden className="size-5" />
+            {th.stats.admin.nav}
+          </Link>
           {publisher && (
             <Link href="/admin/taxonomy" className={buttonClass("secondary", "md")}>
               <Tags aria-hidden className="size-5" />
