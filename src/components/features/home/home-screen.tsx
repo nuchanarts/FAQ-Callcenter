@@ -15,11 +15,13 @@ import { buttonClass } from "@/components/ui/button";
 import { CategoryTabs } from "@/components/features/home/category-tabs";
 import { DegradedNotice } from "@/components/features/home/degraded-notice";
 import { HeroArt } from "@/components/features/home/hero-art";
+import { PopularStrip } from "@/components/features/home/popular-strip";
 import { logTopicView } from "@/lib/log-event";
 import { SearchBox } from "@/components/features/home/search-box";
 import { TopicCard, TopicMeta } from "@/components/features/topic/topic-card";
 import { TopicDetail } from "@/components/features/topic/topic-detail";
 import type { CategoryId } from "@/domain/categories";
+import { FREQUENT_STRIP_LIMIT, POPULAR_BADGE_LIMIT, rankPopular } from "@/domain/popularity";
 import { countByCategory, normalizeQuery, searchTopics } from "@/domain/search";
 import type { EffectiveTopic } from "@/domain/topics";
 import { useDebounce } from "@/hooks/use-debounce";
@@ -28,6 +30,7 @@ import { useMediaQuery, WIDE_SCREEN_QUERY } from "@/hooks/use-media-query";
 import { th } from "@/i18n/th";
 
 const URL_SYNC_MS = 300;
+const NO_COUNTS: Record<string, number> = {};
 
 interface HomeScreenProps {
   topics: EffectiveTopic[];
@@ -37,6 +40,8 @@ interface HomeScreenProps {
   /** From ?q= and ?category= so searches can be shared as links. */
   initialQuery?: string;
   initialCategory?: CategoryId | null;
+  /** All-time views per topic id (public popularity; report counts are never shown here). */
+  viewCounts?: Record<string, number>;
 }
 
 /** Mirror search state into the URL without navigating (shareable, survives Back). */
@@ -64,6 +69,7 @@ export function HomeScreen({
   steps,
   initialQuery = "",
   initialCategory = null,
+  viewCounts = NO_COUNTS,
 }: HomeScreenProps) {
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState<CategoryId | null>(initialCategory);
@@ -74,6 +80,8 @@ export function HomeScreen({
   const wideMatch = useMediaQuery(WIDE_SCREEN_QUERY);
   const wide = wideMatch === true;
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Accordion: a topic picked from the strip is (re)mounted open.
+  const [pickedId, setPickedId] = useState<string | null>(null);
 
   useHotkey("/", (e) => {
     e.preventDefault();
@@ -92,6 +100,27 @@ export function HomeScreen({
   const searching = normalizeQuery(deferredQuery) !== "";
 
   const selected = results.find((t) => t.id === selectedId) ?? results[0];
+
+  const popularIds = useMemo(
+    () => new Set(rankPopular(topics, viewCounts, POPULAR_BADGE_LIMIT).map((t) => t.id)),
+    [topics, viewCounts],
+  );
+  const frequent = useMemo(
+    () => rankPopular(topics, viewCounts, FREQUENT_STRIP_LIMIT),
+    [topics, viewCounts],
+  );
+  const showFrequent = !searching && category === null && frequent.length > 0;
+
+  function pickTopic(id: string) {
+    logTopicView(id);
+    setSelectedId(id);
+    setPickedId(id);
+    requestAnimationFrame(() =>
+      document
+        .getElementById(`topic-${id}`)
+        ?.scrollIntoView?.({ block: "start", behavior: "smooth" }),
+    );
+  }
 
   return (
     <>
@@ -121,6 +150,9 @@ export function HomeScreen({
           </aside>
 
           <section aria-labelledby="topics-title" className="flex min-w-0 flex-col gap-4">
+            {showFrequent && (
+              <PopularStrip topics={frequent} counts={viewCounts} onPick={pickTopic} />
+            )}
             <div className="flex items-baseline justify-between gap-3">
               <h2 id="topics-title" className="text-2xl font-semibold">
                 {th.search.topicsTitle}
@@ -137,8 +169,11 @@ export function HomeScreen({
                 <div className="overflow-hidden rounded-soft border border-line bg-paper sm:overflow-visible sm:border-0 xl:overflow-hidden xl:border xl:bg-surface">
                   {results.map((t) => (
                     <TopicCard
-                      key={t.id}
+                      key={t.id === pickedId ? `${t.id}-picked` : t.id}
                       topic={t}
+                      defaultOpen={t.id === pickedId}
+                      views={viewCounts[t.id]}
+                      popular={popularIds.has(t.id)}
                       wide={wide}
                       selected={t.id === selected.id}
                       onSelect={() => {
@@ -148,7 +183,9 @@ export function HomeScreen({
                     />
                   ))}
                 </div>
-                {wideMatch !== false && <AnswerPane topic={selected} />}
+                {wideMatch !== false && (
+                  <AnswerPane topic={selected} views={viewCounts[selected.id]} />
+                )}
               </div>
             ) : (
               <EmptyState
@@ -174,7 +211,7 @@ export function HomeScreen({
 }
 
 /** Wide screens: the chosen topic's answer beside the list (no expanding one by one). */
-function AnswerPane({ topic }: { topic: EffectiveTopic }) {
+function AnswerPane({ topic, views }: { topic: EffectiveTopic; views?: number }) {
   const headingId = useId();
   return (
     <section
@@ -185,7 +222,7 @@ function AnswerPane({ topic }: { topic: EffectiveTopic }) {
         {topic.title}
       </h2>
       <div className="mb-5">
-        <TopicMeta topic={topic} />
+        <TopicMeta topic={topic} views={views} />
       </div>
       <TopicDetail topic={topic} />
     </section>

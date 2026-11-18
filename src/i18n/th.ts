@@ -100,6 +100,12 @@ export const th = {
     topicsTitle: "หัวข้อปัญหา",
     resultCount: (n: number) => `พบ ${n} หัวข้อ`,
   },
+  stats: {
+    views: (n: number) => `ดู ${n.toLocaleString("th-TH")} ครั้ง`,
+    popular: "ยอดนิยม",
+    frequentTitle: "ปัญหาที่พบบ่อย",
+    frequentLead: "หัวข้อที่มีคนเปิดดูมากที่สุด — ลองดูก่อน อาจเป็นปัญหาเดียวกับคุณ",
+  },
   categories: {
     all: "ทั้งหมด",
     label: "หมวดปัญหา",

@@ -3,7 +3,7 @@ import { HomeScreen } from "@/components/features/home/home-screen";
 import { SiteHeader } from "@/components/features/layout/site-header";
 import { LatestNewsBanner } from "@/components/features/manuals/latest-news-banner";
 import { SEARCH_MAX_LENGTH } from "@/domain/search";
-import { taxonomyService, topicService } from "@/services";
+import { statsService, taxonomyService, topicService } from "@/services";
 import { getManualLibrary } from "@/services/manual-service";
 
 // Admin edits must reach viewers immediately (saving = publishing).
@@ -14,11 +14,13 @@ interface HomePageProps {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
-  const [{ topics, degraded }, params, manuals, taxonomy] = await Promise.all([
+  const [{ topics, degraded }, params, manuals, taxonomy, viewCounts] = await Promise.all([
     topicService().getPublicTopics(),
     searchParams,
     getManualLibrary(),
     taxonomyService().getTaxonomy(),
+    // Never throws: unreadable counters just mean no counts/badges this render.
+    statsService().getViewCounts(),
   ]);
   const q = typeof params.q === "string" ? params.q.slice(0, SEARCH_MAX_LENGTH) : "";
   const requested = typeof params.category === "string" ? params.category : null;
@@ -38,6 +40,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
           }
           initialQuery={q}
           initialCategory={category}
+          viewCounts={viewCounts}
         />
       </main>
     </>

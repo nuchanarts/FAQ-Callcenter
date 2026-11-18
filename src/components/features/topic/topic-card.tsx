@@ -1,12 +1,13 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Eye, Flame } from "lucide-react";
 import { CategoryIcon } from "@/components/features/topic/category-icon";
 import { LevelBadge } from "@/components/features/topic/level-badge";
 import { SymptomThumb } from "@/components/features/topic/symptom-image";
 import { TopicDetail } from "@/components/features/topic/topic-detail";
 import { useTaxonomy } from "@/components/features/taxonomy/taxonomy-context";
+import { VIEW_COUNT_MIN } from "@/domain/popularity";
 import { findCategory } from "@/domain/taxonomy";
 import type { EffectiveTopic } from "@/domain/topics";
 import { th } from "@/i18n/th";
@@ -15,16 +16,37 @@ import { logTopicView } from "@/lib/log-event";
 
 export { reportHref } from "@/components/features/topic/topic-detail";
 
-/** Level badge + category: the same metadata line everywhere a topic is listed. */
-export function TopicMeta({ topic }: { topic: EffectiveTopic }) {
+/** Level badge + category (+ popularity): the same metadata line everywhere a topic is listed. */
+export function TopicMeta({
+  topic,
+  views,
+  popular = false,
+}: {
+  topic: EffectiveTopic;
+  /** Shown from VIEW_COUNT_MIN views up. */
+  views?: number;
+  popular?: boolean;
+}) {
   const category = findCategory(useTaxonomy(), topic.categoryId);
   return (
     <span className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 font-sans text-[0.95rem] font-normal text-ink-faint">
+      {popular && (
+        <span className="inline-flex items-center gap-1 rounded-pill bg-danger-soft px-2 py-0.5 text-[0.85rem] font-semibold text-danger">
+          <Flame aria-hidden className="size-3.5" />
+          {th.stats.popular}
+        </span>
+      )}
       <LevelBadge level={topic.level} />
       {category && (
         <span className="inline-flex items-center gap-1.5">
           <CategoryIcon name={category.icon} />
           {category.name}
+        </span>
+      )}
+      {views !== undefined && views >= VIEW_COUNT_MIN && (
+        <span className="inline-flex items-center gap-1.5">
+          <Eye aria-hidden className="size-4" />
+          {th.stats.views(views)}
         </span>
       )}
     </span>
@@ -38,6 +60,8 @@ interface TopicCardProps {
   selected?: boolean;
   onSelect?: () => void;
   defaultOpen?: boolean;
+  views?: number;
+  popular?: boolean;
 }
 
 /**
@@ -52,6 +76,8 @@ export function TopicCard({
   selected = false,
   onSelect,
   defaultOpen = false,
+  views,
+  popular = false,
 }: TopicCardProps) {
   const [open, setOpen] = useState(defaultOpen);
   const panelId = useId();
@@ -59,6 +85,7 @@ export function TopicCard({
 
   return (
     <article
+      id={`topic-${topic.id}`}
       className={cn(
         "border-b border-line transition-colors last:border-b-0",
         open && !wide && "bg-surface shadow-raise sm:rounded-soft sm:border-transparent",
@@ -91,7 +118,7 @@ export function TopicCard({
             >
               {topic.title}
             </span>
-            <TopicMeta topic={topic} />
+            <TopicMeta topic={topic} views={views} popular={popular} />
           </span>
           <ChevronDown
             aria-hidden
