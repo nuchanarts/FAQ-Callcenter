@@ -14,10 +14,12 @@ interface MessagePreviewProps {
   draft?: boolean;
   /** The validated form values behind `message`; logged once when it is copied or sent. */
   report?: Record<string, string>;
+  /** The topic the report was started from, counted with the report. */
+  topicId?: string;
 }
 
 /** The message as a perforated paper slip: a live draft while typing, then ready to copy. */
-export function MessagePreview({ message, draft = false, report }: MessagePreviewProps) {
+export function MessagePreview({ message, draft = false, report, topicId }: MessagePreviewProps) {
   const textRef = useRef<HTMLPreElement>(null);
   const [copied, setCopied] = useState(false);
   const loggedRef = useRef<string | null>(null);
@@ -26,7 +28,7 @@ export function MessagePreview({ message, draft = false, report }: MessagePrevie
     // One Sheet row per finished message, however many times it is copied.
     if (report && loggedRef.current !== message) {
       loggedRef.current = message;
-      logEvent({ kind: "report", channel, report });
+      logEvent({ kind: "report", channel, report, ...(topicId ? { topicId } : {}) });
     }
   };
   return (

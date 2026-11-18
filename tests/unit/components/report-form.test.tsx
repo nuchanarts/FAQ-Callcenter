@@ -15,7 +15,7 @@ afterEach(() => {
   writeText.mockClear();
 });
 
-function setup(props: { topicTitle?: string } = {}) {
+function setup(props: { topicTitle?: string; topicId?: string } = {}) {
   render(
     <ToastProvider>
       <ReportForm {...props} />
@@ -80,6 +80,18 @@ describe("ReportForm", () => {
     await userEvent.click(screen.getByRole("button", { name: "คัดลอกข้อความ" }));
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining("[หัวข้อ] พิมพ์สติกเกอร์ยาไม่ออก"));
     expect(await screen.findByText("คัดลอกแล้ว")).toBeInTheDocument();
+  });
+
+  it("copying a report started from a topic sends that topicId", async () => {
+    const sendBeacon = vi.fn().mockReturnValue(true);
+    Object.defineProperty(navigator, "sendBeacon", { value: sendBeacon, configurable: true });
+    setup({ topicTitle: "พิมพ์สติกเกอร์ยาไม่ออก", topicId: "b-print" });
+    await fillReporter();
+    await userEvent.type(screen.getByLabelText(/^รายละเอียดปัญหา/), "เครื่องไม่ตอบสนอง");
+    await userEvent.click(screen.getByRole("button", { name: "สร้างข้อความ" }));
+    await userEvent.click(screen.getByRole("button", { name: "คัดลอกข้อความ" }));
+    const sent = JSON.parse(sendBeacon.mock.calls.at(-1)![1] as string);
+    expect(sent).toMatchObject({ kind: "report", channel: "copy", topicId: "b-print" });
   });
 
   async function generateForLine() {

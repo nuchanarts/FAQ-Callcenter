@@ -11,6 +11,7 @@ import { findCategory } from "@/domain/taxonomy";
 import type { EffectiveTopic } from "@/domain/topics";
 import { th } from "@/i18n/th";
 import { cn } from "@/lib/cn";
+import { logTopicView } from "@/lib/log-event";
 
 export { reportHref } from "@/components/features/topic/topic-detail";
 
@@ -70,7 +71,11 @@ export function TopicCard({
           aria-expanded={wide ? undefined : open}
           aria-controls={wide ? undefined : panelId}
           aria-current={highlighted ? "true" : undefined}
-          onClick={() => (wide ? onSelect?.() : setOpen((v) => !v))}
+          onClick={() => {
+            if (wide) return onSelect?.();
+            if (!open) logTopicView(topic.id); // accordion: count opening, not closing
+            setOpen(!open);
+          }}
           className={cn(
             "group flex w-full items-start gap-3 px-4 py-4 text-left sm:px-5",
             "xl:border-l-4 xl:px-4 xl:py-3.5",

@@ -1,10 +1,18 @@
 /**
- * Fire-and-forget usage logging to /api/log (→ Google Sheet). Never throws and never
+ * Fire-and-forget usage logging to /api/log (→ usage counters + Google Sheet). Never throws and never
  * blocks the UI; uses sendBeacon so the request survives the page opening LINE.
  */
 export type LogEvent =
   | { kind: "view"; topicId: string }
-  | { kind: "report"; channel: "line" | "copy"; report: Record<string, string> };
+  | { kind: "helpful" | "unhelpful"; topicId: string }
+  | { kind: "visit" }
+  | {
+      kind: "report";
+      channel: "line" | "copy";
+      report: Record<string, string>;
+      /** The topic the report was started from (/report?topic=…). */
+      topicId?: string;
+    };
 
 export function logEvent(event: LogEvent): void {
   try {

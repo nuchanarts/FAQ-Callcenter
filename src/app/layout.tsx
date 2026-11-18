@@ -5,6 +5,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import { TaxonomyProvider } from "@/components/features/taxonomy/taxonomy-context";
 import { taxonomyService } from "@/services";
 import { skinBootScript } from "@/components/features/layout/skins";
+import { VisitTracker } from "@/components/features/layout/visit-tracker";
 import { th } from "@/i18n/th";
 import "./globals.css";
 
@@ -56,6 +57,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <TaxonomyProvider value={taxonomy}>
           <ToastProvider>{children}</ToastProvider>
         </TaxonomyProvider>
+        <VisitTracker />
       </body>
     </html>
   );

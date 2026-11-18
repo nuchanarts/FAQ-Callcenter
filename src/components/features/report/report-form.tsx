@@ -94,7 +94,7 @@ function pickReporter(values: ReportInput): Reporter {
  * copies it / opens LINE, the report is logged to the team's Google Sheet for follow-up
  * (see /api/log). Reporter details are remembered in this browser only when opted in.
  */
-export function ReportForm({ topicTitle }: { topicTitle?: string }) {
+export function ReportForm({ topicTitle, topicId }: { topicTitle?: string; topicId?: string }) {
   const stored = useLocalStorage<Reporter | null>(REPORTER_STORAGE_KEY, null);
   const [edits, setEdits] = useState<Partial<ReportInput>>({});
   const [rememberChoice, setRememberChoice] = useState<boolean | null>(null);
@@ -328,7 +328,7 @@ export function ReportForm({ topicTitle }: { topicTitle?: string }) {
 
       <div className="lg:sticky lg:top-24">
         {message ? (
-          <MessagePreview message={message} report={values} />
+          <MessagePreview message={message} report={values} topicId={topicId} />
         ) : (
           <MessagePreview message={formatReportDraft(values)} draft />
         )}

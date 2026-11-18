@@ -65,7 +65,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
         </div>
       </section>
       <main id="main" className="page-width py-10 sm:py-12">
-        <ReportForm key={found?.id ?? "none"} topicTitle={found?.title} />
+        <ReportForm key={found?.id ?? "none"} topicTitle={found?.title} topicId={found?.id} />
       </main>
     </>
   );

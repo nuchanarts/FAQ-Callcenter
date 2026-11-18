@@ -38,6 +38,7 @@ var LOG_TABS = {
       "เลข AnyDesk",
       "รายละเอียดปัญหา",
       "สถานะ",
+      "หัวข้อที่เปิดก่อนแจ้ง",
     ],
   },
   view: {
@@ -131,6 +132,12 @@ function appendLog(body) {
     }),
   );
   if (body.kind === "report") row.push("ใหม่");
+  // Columns added later go after "สถานะ" so older tabs keep their column order.
+  if (Array.isArray(body.tail)) {
+    body.tail.forEach(function (v) {
+      row.push(clean(v, 2000));
+    });
+  }
   sheet.appendRow(row);
   return { ok: true };
 }

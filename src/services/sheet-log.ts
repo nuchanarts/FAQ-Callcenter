@@ -19,7 +19,12 @@ export function sheetLogEnabled(): boolean {
   return Boolean(process.env.SHEET_WEBHOOK_URL && process.env.SHEET_WEBHOOK_SECRET);
 }
 
-export async function appendSheetRow(kind: SheetKind, row: string[]): Promise<boolean> {
+/** `tail` cells go after the columns the script adds itself (e.g. report status). */
+export async function appendSheetRow(
+  kind: SheetKind,
+  row: string[],
+  tail: string[] = [],
+): Promise<boolean> {
   const url = process.env.SHEET_WEBHOOK_URL;
   const secret = process.env.SHEET_WEBHOOK_SECRET;
   if (!url || !secret) return false;
@@ -28,7 +33,12 @@ export async function appendSheetRow(kind: SheetKind, row: string[]): Promise<bo
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ secret, kind, row: row.map(neutralizeFormula) }),
+      body: JSON.stringify({
+        secret,
+        kind,
+        row: row.map(neutralizeFormula),
+        tail: tail.map(neutralizeFormula),
+      }),
       redirect: "follow",
       cache: "no-store",
       signal: AbortSignal.timeout(TIMEOUT_MS),
