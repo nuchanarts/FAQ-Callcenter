@@ -219,3 +219,10 @@
 
 - [ ] `npm run typecheck && npm run lint && npx vitest run` ผ่านทั้งหมด
 - [ ] ลองใช้งานจริงบน dev server: แนบรูปอาการ → เห็นในผลค้นหา; เปิดหัวข้อ (จอกว้าง + มือถือ) → ยอดเพิ่ม; แจ้งปัญหาจากหัวข้อ → ยอดแจ้งในหน้าสถิติเพิ่ม
+
+## Addendum (2026-11-18): Helpful feedback
+
+- Task 4: `USAGE_KINDS` = `["view", "report", "visit", "helpful", "unhelpful"]`; Supabase check constraint (Task 5) รวมทั้งห้า
+- Task 6: `LogEvent` เพิ่ม `{ kind: "helpful" | "unhelpful"; topicId: string }`; `/api/log` รับเฉพาะหัวข้อที่มีอยู่จริง (ไม่ส่ง Sheet log); `AdminStats.byTopic[id]` เพิ่ม `helpful`, `unhelpful`
+- Task 6b (ใหม่): `src/components/features/topic/helpful-feedback.tsx` `<HelpfulFeedback topicId />` วางใน `TopicDetail` ก่อนกล่องแจ้งทีม; tests: กดใช่ → ส่ง `helpful` ครั้งเดียวและแสดงคำขอบคุณ; กดไม่ใช่ → ส่ง `unhelpful` และแสดงคำขอบคุณแบบชวนแจ้งทีม; เปิดหัวข้อเดิมซ้ำในการเข้าหน้าเดียว → ไม่แสดงปุ่มอีก
+- Task 8: คอลัมน์ ช่วยได้ / ไม่ช่วย / % ช่วยได้ (ไม่มีคำตอบ → "—")
