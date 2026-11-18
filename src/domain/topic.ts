@@ -9,6 +9,7 @@ export const TOPIC_LIMITS = {
   solution: 5000,
   attachments: 10,
   attachmentLabel: 80,
+  symptomCaption: 80,
   url: 2000,
 } as const;
 
@@ -34,6 +35,18 @@ const attachmentSchema = z.object({
   label: requiredText(TOPIC_LIMITS.attachmentLabel),
   url: requiredText(TOPIC_LIMITS.url).refine(isHttpsUrl, v.https),
 });
+
+/** One screenshot of the problem, shown next to the question in search results. */
+const symptomImageSchema = z.object({
+  url: requiredText(TOPIC_LIMITS.url).refine(isHttpsUrl, v.https),
+  caption: z
+    .string()
+    .trim()
+    .max(TOPIC_LIMITS.symptomCaption, v.tooLong(TOPIC_LIMITS.symptomCaption))
+    .default(""),
+});
+
+export type SymptomImage = z.output<typeof symptomImageSchema>;
 
 function dedupeKeywords(items: string[]): string[] {
   const seen = new Set<string>();
@@ -74,9 +87,16 @@ export const topicContentSchema = z.object({
     .array(attachmentSchema)
     .max(TOPIC_LIMITS.attachments, v.tooMany(TOPIC_LIMITS.attachments))
     .default([]),
+  symptomImage: symptomImageSchema.nullable().default(null),
 });
 
-export type TopicContent = z.output<typeof topicContentSchema>;
+/**
+ * Parsed content always has `symptomImage` (null when none), but records saved before the field
+ * existed (file, Supabase, Sheet, built-ins) don't — so readers treat it as optional.
+ */
+export type TopicContent = Omit<z.output<typeof topicContentSchema>, "symptomImage"> & {
+  symptomImage?: SymptomImage | null;
+};
 export type TopicContentInput = z.input<typeof topicContentSchema>;
 export type Attachment = TopicContent["attachments"][number];
 

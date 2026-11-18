@@ -88,3 +88,40 @@ describe("parseKeywords", () => {
     expect(parseKeywords("ออเทน, authen ,, อ่านบัตร")).toEqual(["ออเทน", "authen", "อ่านบัตร"]);
   });
 });
+
+describe("symptom image", () => {
+  const fieldsOf = (input: unknown) => {
+    try {
+      parseTopicContent(input);
+      return [];
+    } catch (e) {
+      return Object.keys((e as ValidationError).fieldErrors);
+    }
+  };
+  const img = "https://x.public.blob.vercel-storage.com/a.png";
+
+  it("defaults symptomImage to null", () => {
+    expect(parseTopicContent(valid).symptomImage).toBeNull();
+  });
+  it("accepts an https symptom image with empty caption", () => {
+    expect(
+      parseTopicContent({ ...valid, symptomImage: { url: img, caption: "" } }).symptomImage,
+    ).toEqual({
+      url: img,
+      caption: "",
+    });
+  });
+  it("rejects a non-https symptom image", () => {
+    expect(fieldsOf({ ...valid, symptomImage: { url: "http://x/a.png", caption: "" } })).toContain(
+      "symptomImage.url",
+    );
+  });
+  it("rejects a caption over 80 chars", () => {
+    expect(
+      fieldsOf({
+        ...valid,
+        symptomImage: { url: img, caption: "ก".repeat(TOPIC_LIMITS.symptomCaption + 1) },
+      }),
+    ).toContain("symptomImage.caption");
+  });
+});
