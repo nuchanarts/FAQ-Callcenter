@@ -4,6 +4,7 @@ import { toRole } from "@/domain/permissions";
 import type { TopicContent } from "@/domain/topic";
 import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic, TopicDraft, TopicOrigin } from "@/domain/topics";
+import type { UsageCount, UsageKind } from "@/domain/usage";
 import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
 interface TopicRow {
@@ -79,7 +80,7 @@ const toAdminRow = (a: AdminUserRecord): AdminRow => ({
 /**
  * Production adapter (server-side only, service-role key).
  * Admin passwords are verified by the app (scrypt) so sessions behave the same on every backend.
- * Schema + RLS: supabase/migrations/0001_init.sql, 0002_roles_drafts.sql.
+ * Schema + RLS: supabase/migrations/0001_init.sql … 0006_usage.sql.
  */
 export function createSupabaseRepositories(opts: {
   url: string;
@@ -91,6 +92,31 @@ export function createSupabaseRepositories(opts: {
 
   return {
     backend: "supabase",
+    stats: {
+      async increment({ day, kind, topicId }) {
+        // Atomic upsert (+1) in the database, safe across concurrent server instances.
+        const { error } = await db.rpc("increment_usage", {
+          p_day: day,
+          p_kind: kind,
+          p_topic_id: topicId,
+        });
+        if (error) throw error;
+      },
+      async list(sinceDay) {
+        let query = db.from("usage_daily").select("day, kind, topic_id, count");
+        if (sinceDay) query = query.gte("day", sinceDay);
+        const { data, error } = await query;
+        if (error) throw error;
+        return (data as { day: string; kind: string; topic_id: string; count: number }[]).map(
+          (r): UsageCount => ({
+            day: r.day,
+            kind: r.kind as UsageKind,
+            topicId: r.topic_id,
+            count: r.count,
+          }),
+        );
+      },
+    },
     topics: {
       async list() {
         const { data, error } = await db.from("topics").select("*");

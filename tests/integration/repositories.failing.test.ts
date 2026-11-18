@@ -8,3 +8,13 @@ describe("failing adapter", () => {
     await expect(topics.get("x")).rejects.toThrow();
   });
 });
+
+describe("failing adapter usage counters", () => {
+  it("rejects increment and list", async () => {
+    const { stats } = createFailingRepositories({ admins: [] });
+    await expect(
+      stats.increment({ day: "2026-11-18", kind: "view", topicId: "x" }),
+    ).rejects.toThrow();
+    await expect(stats.list(null)).rejects.toThrow();
+  });
+});

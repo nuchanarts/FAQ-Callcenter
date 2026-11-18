@@ -2,6 +2,7 @@ import { ConflictError } from "@/domain/errors";
 import { toRole } from "@/domain/permissions";
 import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic, TopicOrigin } from "@/domain/topics";
+import type { UsageCount, UsageKind } from "@/domain/usage";
 import type { AdminUserRecord, Repositories } from "@/repositories/types";
 
 /**
@@ -38,6 +39,13 @@ interface AdminRow {
   role: string;
   password_hash: string;
   active: string;
+}
+
+interface UsageRow {
+  day: string;
+  kind: string;
+  topic_id: string;
+  count: string | number;
 }
 
 type ScriptReply = { ok: boolean; data?: unknown; error?: string; conflict?: boolean };
@@ -135,6 +143,20 @@ export function createSheetsRepositories(opts: SheetsOptions): Repositories {
 
   return {
     backend: "sheets",
+    stats: {
+      async increment(event) {
+        await call("usage.increment", { ...event });
+      },
+      async list(sinceDay) {
+        const rows = (await call("usage.list", { sinceDay })) as UsageRow[];
+        return rows.map((r): UsageCount => ({
+          day: String(r.day),
+          kind: r.kind as UsageKind,
+          topicId: String(r.topic_id ?? ""),
+          count: Number(r.count),
+        }));
+      },
+    },
     topics: {
       list: listTopics,
       async get(id) {

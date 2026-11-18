@@ -102,3 +102,35 @@ describe("sheets repository", () => {
     });
   });
 });
+
+describe("sheets usage counters", () => {
+  it("increment calls usage.increment with day/kind/topicId", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fetch = script((b) => {
+      bodies.push(b);
+      return { ok: true };
+    });
+    const repo = createSheetsRepositories({ url: "https://s/exec", secret: "k", fetch });
+    await repo.stats.increment({ day: "2026-11-18", kind: "view", topicId: "b-1" });
+    expect(bodies[0]).toMatchObject({
+      secret: "k",
+      action: "usage.increment",
+      day: "2026-11-18",
+      kind: "view",
+      topicId: "b-1",
+    });
+  });
+
+  it("list sends sinceDay and maps rows to numeric counts", async () => {
+    const bodies: Record<string, unknown>[] = [];
+    const fetch = script((b) => {
+      bodies.push(b);
+      return { ok: true, data: [{ day: "2026-11-18", kind: "view", topic_id: "b-1", count: "7" }] };
+    });
+    const repo = createSheetsRepositories({ url: "https://s/exec", secret: "k", fetch });
+    expect(await repo.stats.list("2026-11-12")).toEqual([
+      { day: "2026-11-18", kind: "view", topicId: "b-1", count: 7 },
+    ]);
+    expect(bodies[0]).toMatchObject({ action: "usage.list", sinceDay: "2026-11-12" });
+  });
+});

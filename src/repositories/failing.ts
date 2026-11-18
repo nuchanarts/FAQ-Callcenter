@@ -11,5 +11,6 @@ export function createFailingRepositories(opts: { admins: AdminUserRecord[] }): 
     admins: createAdminUserRepository(opts.admins),
     topics: { list: down, get: down, upsert: down, delete: down },
     taxonomy: { get: down, save: down },
+    stats: { increment: down, list: down },
   };
 }

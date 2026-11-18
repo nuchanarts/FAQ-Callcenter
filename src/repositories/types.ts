@@ -1,6 +1,7 @@
 import type { AdminRole } from "@/domain/permissions";
 import type { Taxonomy } from "@/domain/taxonomy";
 import type { StoredTopic } from "@/domain/topics";
+import type { UsageCount, UsageEvent } from "@/domain/usage";
 
 export interface TopicRepository {
   list(): Promise<StoredTopic[]>;
@@ -46,9 +47,18 @@ export interface TaxonomyRepository {
   save(taxonomy: Taxonomy, expectedVersion: number | null): Promise<StoredTaxonomy>;
 }
 
+/** Daily usage counters (views, reports, visits, helpful votes). */
+export interface StatsRepository {
+  /** Adds one to the counter for this day/kind/topic. */
+  increment(event: UsageEvent): Promise<void>;
+  /** Counters on or after sinceDay (YYYY-MM-DD); null = all. */
+  list(sinceDay: string | null): Promise<UsageCount[]>;
+}
+
 export interface Repositories {
   backend: string;
   topics: TopicRepository;
   admins: AdminUserRepository;
   taxonomy: TaxonomyRepository;
+  stats: StatsRepository;
 }

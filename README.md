@@ -124,7 +124,10 @@ Sheet as the logs, read and written only through the Apps Script with the shared
 Sheet must be shared **Restricted**. Reads are cached per server instance (topics 20 s, admins
 60 s). Create the first owner with
 `npm run create-owner -- <gmail> "<name>"`, then add others in the app.
-Never edit `admin_users` by hand.
+Never edit `admin_users` by hand. Usage counters (views, reports, helpful votes, visits —
+shown on the home page and at `/admin/stats`) go to tab `usage_daily`; **after updating to a
+version with statistics, paste the new script and deploy a new version** (Deploy → Manage
+deployments → Edit → Version "New version"), otherwise counting fails silently.
 
 ## Google Sheet log (reports + topic views)
 
@@ -143,8 +146,9 @@ best-effort: if the Sheet is down or unconfigured the app keeps working.
 
 ## Production (Supabase)
 
-1. Apply [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql)
-   (tables `topics`, `admin_users`, Row Level Security on).
+1. Apply every file in [`supabase/migrations/`](supabase/migrations/) in order
+   (`0001_init.sql` … `0006_usage.sql`: tables `topics`, `admin_users`, `app_settings`,
+   `usage_daily` + function `increment_usage`, Row Level Security on).
 2. Create admins: `npm run hash-password -- "<a long password>"` prints an scrypt hash;
    insert it with the admin's email (lower-case), display name and role (`owner`/`editor`)
    into `admin_users`.

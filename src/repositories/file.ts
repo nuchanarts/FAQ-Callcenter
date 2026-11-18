@@ -1,6 +1,7 @@
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import type { StoredTopic } from "@/domain/topics";
+import { applyIncrement, rowsSince, type UsageCount } from "@/domain/usage";
 import {
   applyAdminUpsert,
   applyTaxonomySave,
@@ -16,6 +17,8 @@ interface FileShape {
   /** Absent until an admin account is first changed; until then the seed admins apply. */
   admins?: AdminUserRecord[];
   taxonomy?: StoredTaxonomy;
+  /** Daily usage counters (absent until something is counted). */
+  usage?: UsageCount[];
 }
 
 /**
@@ -36,6 +39,7 @@ export function createFileRepositories(opts: {
         topics: Array.isArray(data.topics) ? data.topics : [],
         admins: Array.isArray(data.admins) ? data.admins : undefined,
         taxonomy: data.taxonomy,
+        usage: Array.isArray(data.usage) ? data.usage : undefined,
       };
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code === "ENOENT") return { topics: [] };
@@ -66,6 +70,17 @@ export function createFileRepositories(opts: {
 
   return {
     backend: "file",
+    stats: {
+      increment(event) {
+        return serialized(async () => {
+          const current = await loadAll();
+          await saveAll({ ...current, usage: applyIncrement(current.usage ?? [], event) });
+        });
+      },
+      async list(since) {
+        return rowsSince((await loadAll()).usage ?? [], since);
+      },
+    },
     taxonomy: {
       async get() {
         return (await loadAll()).taxonomy ?? null;

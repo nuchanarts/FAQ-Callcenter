@@ -5,6 +5,8 @@
  *  1. Logging  — appends rows to "reports" (problem reports) and "views" (topic views).
  *  2. Database — DATA_BACKEND=sheets: FAQ topics in "faq_topics", admin accounts in
  *                "admin_users" (read/insert/update with version checks under a lock).
+ *  3. Counters — "usage_daily": daily usage counts (views, reports, helpful votes, visits)
+ *                for every backend that keeps its counters here (DATA_BACKEND=sheets).
  *
  * Setup (once, about 2 minutes):
  *  1. Open the Google Sheet → Extensions → Apps Script. Replace Code.gs with this file.
@@ -64,6 +66,10 @@ var DATA_TABS = {
     name: "settings",
     headers: ["key", "value_json", "version"],
   },
+  usage: {
+    name: "usage_daily",
+    headers: ["day", "kind", "topic_id", "count"],
+  },
   admins: {
     name: "admin_users",
     headers: ["id", "email", "display_name", "role", "password_hash", "active"],
@@ -94,6 +100,10 @@ function doPost(e) {
         }
         case "settings.set":
           return json(setSetting(body));
+        case "usage.increment":
+          return json(incrementUsage(body));
+        case "usage.list":
+          return json({ ok: true, data: listUsage(body.sinceDay) });
         case "admins.list":
           return json({ ok: true, data: readRows(DATA_TABS.admins) });
         case "admins.upsert":
@@ -164,6 +174,38 @@ function upsertAdmin(row) {
   var found = findRow(tab, "id", row.id);
   writeRow(tab, found ? found.index : null, row);
   return { ok: true, data: row };
+}
+
+// ── Usage counters ───────────────────────────────────────────────────────
+
+var USAGE_KINDS = ["view", "report", "visit", "helpful", "unhelpful"];
+
+/** +1 on the (day, kind, topic_id) row; runs under the script lock taken in doPost. */
+function incrementUsage(body) {
+  var day = String(body.day || "");
+  var kind = String(body.kind || "");
+  var topicId = String(body.topicId || "").slice(0, 100);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || USAGE_KINDS.indexOf(kind) === -1) {
+    return { ok: false, error: "bad request" };
+  }
+  var tab = DATA_TABS.usage;
+  var sheet = ensureSheet(tab, true);
+  var values = sheet.getDataRange().getValues();
+  for (var r = 1; r < values.length; r++) {
+    if (String(values[r][0]) === day && String(values[r][1]) === kind && String(values[r][2]) === topicId) {
+      writeRow(tab, r + 1, { day: day, kind: kind, topic_id: topicId, count: String(Number(values[r][3]) + 1) });
+      return { ok: true };
+    }
+  }
+  writeRow(tab, null, { day: day, kind: kind, topic_id: topicId, count: "1" });
+  return { ok: true };
+}
+
+function listUsage(sinceDay) {
+  var since = sinceDay ? String(sinceDay) : "";
+  return readRows(DATA_TABS.usage).filter(function (row) {
+    return !since || row.day >= since;
+  });
 }
 
 function readRows(tab) {
